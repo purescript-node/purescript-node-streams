@@ -1,0 +1,20 @@
+{
+  "name": "purescript-node-streams",
+  "moduleType": [
+    "node"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "devDependencies": {
+    "purescript-console": "^0.1.0"
+  },
+  "dependencies": {
+    "purescript-eff": "~0.1.1",
+    "purescript-node-buffer": "~0.1.0",
+    "purescript-prelude": "~0.1.2"
+  }
+}
