@@ -10,7 +10,7 @@ exports.setEncodingImpl = function(s) {
     };
 };
 
-exports.onData = function(r) {
+exports.onData = function(s) {
     return function(f) {
         return function() {
             s.on('data', function(chunk) {
@@ -20,7 +20,7 @@ exports.onData = function(r) {
     };
 };
 
-exports.onEnd = function(r) {
+exports.onEnd = function(s) {
     return function(f) {
         return function() {
             s.on('end', function() {
@@ -30,7 +30,7 @@ exports.onEnd = function(r) {
     };
 };
 
-exports.onError = function(r) {
+exports.onError = function(s) {
     return function(f) {
         return function() {
             s.on('error', function() {
@@ -40,7 +40,7 @@ exports.onError = function(r) {
     };
 };
 
-exports.onClose = function(r) {
+exports.onClose = function(s) {
     return function(f) {
         return function() {
             s.on('close', function() {
