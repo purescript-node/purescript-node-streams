@@ -122,7 +122,7 @@ exports.end = function(w) {
     return function(done) {
         return function() {
             w.end(null, null, function() {
-                f();
+                done();
             });
         };
     };
