@@ -139,7 +139,7 @@ Write a chunk to a writable stream.
 #### `writeString`
 
 ``` purescript
-writeString :: forall r eff a. Writable r eff String -> Encoding -> String -> Eff eff Unit -> Eff eff Boolean
+writeString :: forall r eff. Writable r eff String -> Encoding -> String -> Eff eff Unit -> Eff eff Boolean
 ```
 
 Write a string in the specified encoding to a writable stream.

@@ -87,10 +87,10 @@ foreign import pipe :: forall r w eff a. Readable w eff a -> Writable r eff a ->
 -- | Write a chunk to a writable stream.
 foreign import write :: forall r eff a. Writable r eff String -> a -> Eff eff Unit -> Eff eff Boolean
 
-foreign import writeStringImpl :: forall r eff a. Writable r eff String -> String -> String -> Eff eff Unit -> Eff eff Boolean
+foreign import writeStringImpl :: forall r eff. Writable r eff String -> String -> String -> Eff eff Unit -> Eff eff Boolean
 
 -- | Write a string in the specified encoding to a writable stream.
-writeString :: forall r eff a. Writable r eff String -> Encoding -> String -> Eff eff Unit -> Eff eff Boolean
+writeString :: forall r eff. Writable r eff String -> Encoding -> String -> Eff eff Unit -> Eff eff Boolean
 writeString w enc = writeStringImpl w (show enc)
 
 -- | Force buffering of writes.
