@@ -9,16 +9,16 @@
     "bower_components",
     "output"
   ],
-  "repository": {                                                          
-    "type": "git",                                                         
-    "url": "git://github.com/purescript-node/purescript-node-streams.git"            
-  }, 
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/purescript-node/purescript-node-streams.git"
+  },
   "devDependencies": {
     "purescript-console": "^0.1.0"
   },
   "dependencies": {
     "purescript-eff": "~0.1.1",
-    "purescript-node-buffer": "~0.1.0",
+    "purescript-node-buffer": "~0.2.0",
     "purescript-prelude": "~0.1.2"
   }
 }
