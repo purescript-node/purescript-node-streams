@@ -1,6 +1,6 @@
 -- | This module provides a low-level wrapper for the Node Stream API.
 
-module Node.Stream 
+module Node.Stream
   ( Stream()
   , Read()
   , Readable()
@@ -23,13 +23,13 @@ module Node.Stream
   , setDefaultEncoding
   , end
   ) where
-    
+
 import Prelude
 
 import Node.Encoding
 
 import Control.Monad.Eff
-    
+
 -- | A stream.
 -- |
 -- | The type arguments track, in order:
