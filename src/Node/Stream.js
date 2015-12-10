@@ -10,7 +10,7 @@ exports.setEncodingImpl = function(s) {
     };
 };
 
-exports.onData = function(s) {
+exports.onDataImpl = function(s) {
     return function(f) {
         return function() {
             s.on('data', function(chunk) {
