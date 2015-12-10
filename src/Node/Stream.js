@@ -15,6 +15,9 @@ exports.onDataImpl = function(s) {
     return function(f) {
         return function() {
             s.on('data', function(chunk) {
+                if (!(chunk instanceof Buffer)) {
+                  throw new Error("Node.Stream.onDataImpl: stream encoding should not be set");
+                }
                 f(chunk)();
             });
         };
