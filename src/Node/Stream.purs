@@ -9,6 +9,7 @@ module Node.Stream
   , Duplex()
   , setEncoding
   , onData
+  , onDataString
   , onEnd
   , onClose
   , onError
@@ -117,7 +118,7 @@ foreign import uncork :: forall r eff. Writable r eff -> Eff eff Unit
 
 foreign import setDefaultEncodingImpl :: forall r eff. Writable r eff -> String -> Eff eff Unit
 
--- | Set the default encoding used to write chunks to the stream. This function
+-- | Set the default encoding used to write strings to the stream. This function
 -- | is useful when you are passing a writable stream to some other JavaScript
 -- | library, which already expects a default encoding to be set. It has no
 -- | effect on the behaviour of the `writeString` function (because that
