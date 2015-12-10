@@ -1,3 +1,4 @@
+/* global exports */
 "use strict";
 
 // module Node.Stream
