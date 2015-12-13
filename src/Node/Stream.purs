@@ -78,9 +78,7 @@ onData r cb =
 -- | decoded using the given encoding. Note that this will fail if `setEncoding`
 -- | has been called on the stream.
 onDataString :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Encoding -> (String -> Eff (err :: EXCEPTION | eff) Unit) -> Eff (err :: EXCEPTION | eff) Unit
-onDataString r enc cb = onData r $ \buf -> do
-  str <- unsafeInterleaveEff (Buffer.toString enc buf)
-  cb str
+onDataString r enc cb = onData r (cb <=< unsafeInterleaveEff <<< Buffer.toString enc)
 
 foreign import onDataEitherImpl :: forall w eff. (forall l r. l -> Either l r) -> (forall l r. r -> Either l r) -> Readable w eff -> (Either String Buffer -> Eff eff Unit) -> Eff eff Unit
 
@@ -149,3 +147,4 @@ setDefaultEncoding r enc = setDefaultEncodingImpl r (show enc)
 
 -- | End writing data to the stream.
 foreign import end :: forall r eff. Writable r eff -> Eff eff Unit -> Eff eff Unit
+

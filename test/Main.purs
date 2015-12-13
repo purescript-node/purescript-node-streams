@@ -37,6 +37,9 @@ main = do
   log "setEncoding should not affect reading"
   testSetEncoding
 
+  log "test pipe"
+  testPipe
+
 testString :: String
 testString = "üöß💡"
 
@@ -71,3 +74,31 @@ testSetEncoding = do
       onDataEither r2 \(Left str) -> do
         assertEqual <$> Buffer.toString enc buf <*> pure testString
         assertEqual str testString
+
+testPipe = do
+  sIn   <- passThrough
+  sOut  <- passThrough
+  zip   <- createGzip
+  unzip <- createGunzip
+
+  log "pipe 1"
+  sIn `pipe` zip
+  log "pipe 2"
+  zip `pipe` unzip
+  log "pipe 3"
+  unzip `pipe` sOut
+
+  writeString sIn UTF8 testString do
+    end sIn do
+      onDataString sOut UTF8 \str -> do
+        assertEqual str testString
+
+foreign import data GZIP :: !
+
+foreign import createGzip :: forall eff. Eff (gzip :: GZIP | eff) (Duplex (gzip :: GZIP | eff))
+foreign import createGunzip :: forall eff. Eff (gzip :: GZIP | eff) (Duplex (gzip :: GZIP | eff))
+
+foreign import data PASS_THROUGH :: !
+
+-- | Create a PassThrough stream, which simply writes its input to its output.
+foreign import passThrough :: forall eff. Eff (stream :: PASS_THROUGH | eff) (Duplex (stream :: PASS_THROUGH | eff))

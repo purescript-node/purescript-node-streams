@@ -28,3 +28,11 @@ exports.putImpl = function(str) {
     };
   };
 };
+
+exports.createGzip = require('zlib').createGzip;
+exports.createGunzip = require('zlib').createGunzip;
+
+exports.passThrough = function () {
+    var s = require('stream');
+    return new s.PassThrough();
+};
