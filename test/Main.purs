@@ -2,6 +2,7 @@ module Test.Main where
 
 import Prelude
 
+import Data.Either (Either(..))
 import Node.Buffer as Buffer
 import Node.Encoding
 import Node.Stream
@@ -37,7 +38,7 @@ main = do
   testSetEncoding
 
 testString :: String
-testString = "Liebe Grüße\nBergentrückung\n💡"
+testString = "üöß💡"
 
 testSetDefaultEncoding = do
   w1 <- writableStreamBuffer
@@ -54,28 +55,19 @@ testSetDefaultEncoding = do
       assertEqual testString c
 
 testSetEncoding = do
-  check readableStreamBuffer
-
-  check do
-    r2 <- readableStreamBuffer
-    setEncoding r2 UTF8
-    pure r2
-
-  check do
-    r3 <- readableStreamBuffer
-    setEncoding r3 UCS2
-    pure r3
-
+  check UTF8
+  check UTF16LE
+  check UCS2
   where
-  check makeR = do
-    r1 <- makeR
-    put testString UTF8 r1
+  check enc = do
+    r1 <- readableStreamBuffer
+    put testString enc r1
 
-    r2 <- makeR
-    put testString UTF8 r2
+    r2 <- readableStreamBuffer
+    put testString enc r2
+    setEncoding r2 enc
 
     onData r1 \buf -> do
-      onDataString r2 UTF8 \str -> do
+      onDataEither r2 \(Left str) -> do
         assertEqual <$> Buffer.toString UTF8 buf <*> pure testString
         assertEqual str testString
-        log "ok."
