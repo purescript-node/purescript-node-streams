@@ -7,9 +7,10 @@ module Node.Stream
   , Write()
   , Writable()
   , Duplex()
-  , setEncoding
   , onData
   , onDataString
+  , onDataEither
+  , setEncoding
   , onEnd
   , onClose
   , onError
@@ -27,11 +28,14 @@ module Node.Stream
 
 import Prelude
 
+import Control.Bind ((<=<))
+import Data.Either (Either(..))
 import Node.Encoding
 import Node.Buffer (Buffer())
 import Node.Buffer as Buffer
 
 import Control.Monad.Eff
+import Control.Monad.Eff.Exception (throw, EXCEPTION())
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
 
 -- | A stream.
@@ -57,28 +61,45 @@ type Writable r = Stream (write :: Write | r)
 -- | A duplex (readable _and_ writable stream)
 type Duplex = Stream (read :: Read, write :: Write)
 
-foreign import setEncodingImpl :: forall w eff. Readable w eff -> String -> Eff eff Unit
-
--- | Set the encoding used to read chunks as strings from the stream. This
--- | function is useful when you are passing a readable stream to some other
--- | JavaScript library, which already expects an encoding to be set. It
--- | has no effect on the behaviour of the `onDataString` function (because
--- | that function ensures that the encoding is always supplied explicitly).
-setEncoding :: forall w eff. Readable w eff -> Encoding -> Eff eff Unit
-setEncoding r enc = setEncodingImpl r (show enc)
-
-foreign import onDataImpl :: forall w eff a. Readable w eff -> (a -> Eff eff Unit) -> Eff eff Unit
-
--- | Listen for `data` events, returning data in a Buffer.
-onData :: forall w eff. Readable w eff -> (Buffer -> Eff eff Unit) -> Eff eff Unit
-onData = onDataImpl
+-- | Listen for `data` events, returning data in a Buffer. Note that this will fail
+-- | if `setEncoding` has been called on the stream.
+onData :: forall w eff. Readable w (err :: EXCEPTION | eff) -> (Buffer -> Eff (err :: EXCEPTION | eff) Unit) -> Eff (err :: EXCEPTION | eff) Unit
+onData r cb =
+  onDataEither r (cb <=< fromEither)
+  where
+  fromEither x =
+    case x of
+      Left _  ->
+        throw "Node.Stream.onData: Stream encoding should not be set"
+      Right buf ->
+        pure buf
 
 -- | Listen for `data` events, returning data in a String, which will be
--- | decoded using the given encoding.
-onDataString :: forall w eff. Readable w eff -> Encoding -> (String -> Eff eff Unit) -> Eff eff Unit
+-- | decoded using the given encoding. Note that this will fail if `setEncoding`
+-- | has been called on the stream.
+onDataString :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Encoding -> (String -> Eff (err :: EXCEPTION | eff) Unit) -> Eff (err :: EXCEPTION | eff) Unit
 onDataString r enc cb = onData r $ \buf -> do
   str <- unsafeInterleaveEff (Buffer.toString enc buf)
   cb str
+
+foreign import onDataEitherImpl :: forall w eff. (forall l r. l -> Either l r) -> (forall l r. r -> Either l r) -> Readable w eff -> (Either String Buffer -> Eff eff Unit) -> Eff eff Unit
+
+-- | Listen for `data` events, returning data in an `Either String Buffer`. This
+-- | function is provided for the (hopefully rare) case that `setEncoding` has
+-- | been called on the stream.
+onDataEither :: forall w eff. Readable w eff -> (Either String Buffer -> Eff eff Unit) -> Eff eff Unit
+onDataEither = onDataEitherImpl Left Right
+
+foreign import setEncodingImpl :: forall w eff. Readable w eff -> String -> Eff eff Unit
+
+-- | Set the encoding used to read chunks as strings from the stream. This
+-- | function may be useful when you are passing a readable stream to some other
+-- | JavaScript library, which already expects an encoding to be set.
+-- |
+-- | Where possible, you should try to use `onDataString` instead of this
+-- | function.
+setEncoding :: forall w eff. Readable w eff -> Encoding -> Eff eff Unit
+setEncoding r enc = setEncodingImpl r (show enc)
 
 -- | Listen for `end` events.
 foreign import onEnd :: forall w eff. Readable w eff -> Eff eff Unit -> Eff eff Unit

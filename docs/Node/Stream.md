@@ -55,6 +55,35 @@ type Duplex = Stream (read :: Read, write :: Write)
 
 A duplex (readable _and_ writable stream)
 
+#### `onData`
+
+``` purescript
+onData :: forall w eff. Readable w (err :: EXCEPTION | eff) -> (Buffer -> Eff (err :: EXCEPTION | eff) Unit) -> Eff (err :: EXCEPTION | eff) Unit
+```
+
+Listen for `data` events, returning data in a Buffer. Note that this will fail
+if `setEncoding` has been called on the stream.
+
+#### `onDataString`
+
+``` purescript
+onDataString :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Encoding -> (String -> Eff (err :: EXCEPTION | eff) Unit) -> Eff (err :: EXCEPTION | eff) Unit
+```
+
+Listen for `data` events, returning data in a String, which will be
+decoded using the given encoding. Note that this will fail if `setEncoding`
+has been called on the stream.
+
+#### `onDataEither`
+
+``` purescript
+onDataEither :: forall w eff. Readable w eff -> (Either String Buffer -> Eff eff Unit) -> Eff eff Unit
+```
+
+Listen for `data` events, returning data in an `Either String Buffer`. This
+function is provided for the (hopefully rare) case that `setEncoding` has
+been called on the stream.
+
 #### `setEncoding`
 
 ``` purescript
@@ -62,27 +91,11 @@ setEncoding :: forall w eff. Readable w eff -> Encoding -> Eff eff Unit
 ```
 
 Set the encoding used to read chunks as strings from the stream. This
-function is useful when you are passing a readable stream to some other
-JavaScript library, which already expects an encoding to be set. It
-has no effect on the behaviour of the `onDataString` function (because
-that function ensures that the encoding is always supplied explicitly).
+function may be useful when you are passing a readable stream to some other
+JavaScript library, which already expects an encoding to be set.
 
-#### `onData`
-
-``` purescript
-onData :: forall w eff. Readable w eff -> (Buffer -> Eff eff Unit) -> Eff eff Unit
-```
-
-Listen for `data` events, returning data in a Buffer.
-
-#### `onDataString`
-
-``` purescript
-onDataString :: forall w eff. Readable w eff -> Encoding -> (String -> Eff eff Unit) -> Eff eff Unit
-```
-
-Listen for `data` events, returning data in a String, which will be
-decoded using the given encoding.
+Where possible, you should try to use `onDataString` instead of this
+function.
 
 #### `onEnd`
 
