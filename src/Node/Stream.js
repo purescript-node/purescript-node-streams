@@ -21,7 +21,7 @@ exports.onDataEitherImpl = function(left){
                         if (chunk instanceof Buffer) {
                             f(right(chunk))();
                         }
-                        else if (chunk instanceof String) {
+                        else if (typeof chunk === "string") {
                             f(left(chunk))();
                         }
                         else {
