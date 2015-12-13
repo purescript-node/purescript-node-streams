@@ -69,5 +69,5 @@ testSetEncoding = do
 
     onData r1 \buf -> do
       onDataEither r2 \(Left str) -> do
-        assertEqual <$> Buffer.toString UTF8 buf <*> pure testString
+        assertEqual <$> Buffer.toString enc buf <*> pure testString
         assertEqual str testString
