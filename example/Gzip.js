@@ -5,3 +5,5 @@
 // module Gzip
 
 exports.gzip = require('zlib').createGzip;
+exports.stdout = process.stdout;
+exports.stdin = process.stdin;
