@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "postinstall": "pulp dep install",
+    "build": "jshint src && pulp build && rimraf docs && pulp docs"
+  },
+  "devDependencies": {
+    "jshint": "^2.8.0",
+    "pulp": "^4.0.2",
+    "rimraf": "^2.4.1",
+    "stream-buffers": "^3.0.0"
+  }
+}

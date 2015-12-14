@@ -1,3 +1,5 @@
+/* global exports */
+/* global Buffer */
 "use strict";
 
 // module Node.Stream
@@ -10,12 +12,27 @@ exports.setEncodingImpl = function(s) {
     };
 };
 
-exports.onData = function(s) {
-    return function(f) {
-        return function() {
-            s.on('data', function(chunk) {
-                f(chunk)();
-            });
+exports.onDataEitherImpl = function(left){
+    return function(right){
+        return function(s) {
+            return function(f) {
+                return function() {
+                    s.on('data', function(chunk) {
+                        if (chunk instanceof Buffer) {
+                            f(right(chunk))();
+                        }
+                        else if (typeof chunk === "string") {
+                            f(left(chunk))();
+                        }
+                        else {
+                            throw new Error(
+                                "Node.Stream.onDataEitherImpl: Unrecognised" +
+                                "chunk type; expected String or Buffer, got:" +
+                                chunk);
+                        }
+                    });
+                };
+            };
         };
     };
 };

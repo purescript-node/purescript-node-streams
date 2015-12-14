@@ -14,11 +14,14 @@
     "url": "git://github.com/purescript-node/purescript-node-streams.git"
   },
   "devDependencies": {
-    "purescript-console": "^0.1.0"
+    "purescript-console": "^0.1.0",
+    "purescript-assert": "~0.1.1"
   },
   "dependencies": {
     "purescript-eff": "~0.1.1",
     "purescript-node-buffer": "~0.2.0",
-    "purescript-prelude": "~0.1.2"
+    "purescript-prelude": "~0.1.2",
+    "purescript-either": "~0.2.3",
+    "purescript-exceptions": "~0.3.3"
   }
 }
