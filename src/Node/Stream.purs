@@ -35,7 +35,7 @@ import Node.Buffer (Buffer())
 import Node.Buffer as Buffer
 
 import Control.Monad.Eff
-import Control.Monad.Eff.Exception (throw, EXCEPTION())
+import Control.Monad.Eff.Exception (throw, EXCEPTION(), Error())
 import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
 
 -- | A stream.
@@ -106,7 +106,7 @@ foreign import onEnd :: forall w eff. Readable w eff -> Eff eff Unit -> Eff eff 
 foreign import onClose :: forall w eff. Readable w eff -> Eff eff Unit -> Eff eff Unit
 
 -- | Listen for `error` events.
-foreign import onError :: forall w eff. Readable w eff -> Eff eff Unit -> Eff eff Unit
+foreign import onError :: forall w eff. Readable w eff -> (Error -> Eff eff Unit) -> Eff eff Unit
 
 -- | Resume reading from the stream.
 foreign import resume :: forall w eff. Readable w eff -> Eff eff Unit

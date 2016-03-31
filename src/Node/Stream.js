@@ -50,8 +50,8 @@ exports.onEnd = function(s) {
 exports.onError = function(s) {
     return function(f) {
         return function() {
-            s.on('error', function() {
-                f();
+            s.on('error', function(e) {
+                f(e)();
             });
         };
     };
