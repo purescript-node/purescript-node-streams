@@ -1,8 +1,6 @@
 {
   "name": "purescript-node-streams",
-  "moduleType": [
-    "node"
-  ],
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "node_modules",
