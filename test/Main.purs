@@ -2,11 +2,12 @@ module Test.Main where
 
 import Prelude
 
+import Data.Maybe (Maybe(..), isNothing, isJust)
+import Data.Maybe.Unsafe (fromJust)
 import Data.Either (Either(..))
 import Node.Buffer as Buffer
 import Node.Encoding
 import Node.Stream
-import Node.Stream.StdIO
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Console
@@ -40,8 +41,45 @@ main = do
   log "test pipe"
   testPipe
 
+  log "test manual reads"
+  testReads
+
 testString :: String
 testString = "üöß💡"
+
+testReads = do
+  testReadString
+  testReadBuf
+
+  where
+    testReadString = do
+      sIn <- passThrough
+      v   <- readString sIn UTF8
+      assert (isNothing v)
+
+      onReadable sIn do
+        str <- readString sIn UTF8
+        assert (isJust str)
+        assertEqual (fromJust str) testString
+        return unit
+
+      writeString sIn UTF8 testString do
+        return unit
+
+    testReadBuf = do
+      sIn <- passThrough
+      v   <- read sIn
+      assert (isNothing v)
+
+      onReadable sIn do
+        buf <- read sIn
+        assert (isJust buf)
+        assertEqual <$> (Buffer.toString UTF8 (fromJust buf))
+                    <*> pure testString
+        return unit
+
+      writeString sIn UTF8 testString do
+        return unit
 
 testSetDefaultEncoding = do
   w1 <- writableStreamBuffer
