@@ -11,6 +11,7 @@ module Node.Stream
   , onDataString
   , onDataEither
   , setEncoding
+  , onReadable
   , onEnd
   , onClose
   , onError
@@ -18,6 +19,9 @@ module Node.Stream
   , pause
   , isPaused
   , pipe
+  , read
+  , readString
+  , readEither
   , write
   , writeString
   , cork
@@ -29,6 +33,7 @@ module Node.Stream
 import Prelude
 
 import Control.Bind ((<=<))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Either (Either(..))
 import Node.Encoding
 import Node.Buffer (Buffer())
@@ -61,6 +66,11 @@ type Writable r = Stream (write :: Write | r)
 -- | A duplex (readable _and_ writable stream)
 type Duplex = Stream (read :: Read, write :: Write)
 
+foreign import data Chunk :: *
+readChunk :: Chunk -> Either String Buffer
+readChunk = readChunkImpl Left Right
+foreign import readChunkImpl :: (forall l r. l -> Either l r) -> (forall l r. r -> Either l r) -> Chunk -> Either String Buffer
+
 -- | Listen for `data` events, returning data in a Buffer. Note that this will fail
 -- | if `setEncoding` has been called on the stream.
 onData :: forall w eff. Readable w (err :: EXCEPTION | eff) -> (Buffer -> Eff (err :: EXCEPTION | eff) Unit) -> Eff (err :: EXCEPTION | eff) Unit
@@ -70,9 +80,30 @@ onData r cb =
   fromEither x =
     case x of
       Left _  ->
-        throw "Node.Stream.onData: Stream encoding should not be set"
+        throw "Stream encoding should not be set"
       Right buf ->
         pure buf
+
+read :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Eff (err :: EXCEPTION | eff) (Maybe Buffer)
+read r = do
+  v <- readEither r
+  case v of
+       Nothing        -> pure Nothing
+       Just (Left _)  -> throw "Stream encoding should not be set"
+       Just (Right b) -> pure (Just b)
+
+readString :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Encoding -> Eff (err :: EXCEPTION | eff) (Maybe String)
+readString r enc = do
+  v <- readEither r
+  case v of
+       Nothing          -> pure Nothing
+       Just (Left _)    -> throw "Stream encoding should not be set"
+       Just (Right buf) -> Just <$> (unsafeInterleaveEff $ Buffer.toString enc buf)
+
+readEither :: forall w eff. Readable w eff -> Eff eff (Maybe (Either String Buffer))
+readEither = readImpl readChunk Nothing Just
+
+foreign import readImpl :: forall r eff. (Chunk -> Either String Buffer) -> (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Readable r eff -> Eff eff (Maybe (Either String Buffer))
 
 -- | Listen for `data` events, returning data in a String, which will be
 -- | decoded using the given encoding. Note that this will fail if `setEncoding`
@@ -80,13 +111,13 @@ onData r cb =
 onDataString :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Encoding -> (String -> Eff (err :: EXCEPTION | eff) Unit) -> Eff (err :: EXCEPTION | eff) Unit
 onDataString r enc cb = onData r (cb <=< unsafeInterleaveEff <<< Buffer.toString enc)
 
-foreign import onDataEitherImpl :: forall w eff. (forall l r. l -> Either l r) -> (forall l r. r -> Either l r) -> Readable w eff -> (Either String Buffer -> Eff eff Unit) -> Eff eff Unit
-
 -- | Listen for `data` events, returning data in an `Either String Buffer`. This
 -- | function is provided for the (hopefully rare) case that `setEncoding` has
 -- | been called on the stream.
-onDataEither :: forall w eff. Readable w eff -> (Either String Buffer -> Eff eff Unit) -> Eff eff Unit
-onDataEither = onDataEitherImpl Left Right
+onDataEither :: forall r eff. Readable r (err :: EXCEPTION | eff) -> (Either String Buffer -> Eff (err :: EXCEPTION | eff) Unit) -> Eff (err :: EXCEPTION | eff) Unit
+onDataEither r cb = onDataEitherImpl readChunk r cb
+
+foreign import onDataEitherImpl :: forall r eff. (Chunk -> Either String Buffer) -> Readable r eff -> (Either String Buffer -> Eff eff Unit) -> Eff eff Unit
 
 foreign import setEncodingImpl :: forall w eff. Readable w eff -> String -> Eff eff Unit
 
@@ -98,6 +129,9 @@ foreign import setEncodingImpl :: forall w eff. Readable w eff -> String -> Eff 
 -- | function.
 setEncoding :: forall w eff. Readable w eff -> Encoding -> Eff eff Unit
 setEncoding r enc = setEncodingImpl r (show enc)
+
+-- | Listen for `readable` events.
+foreign import onReadable :: forall w eff. Readable w eff -> Eff eff Unit -> Eff eff Unit
 
 -- | Listen for `end` events.
 foreign import onEnd :: forall w eff. Readable w eff -> Eff eff Unit -> Eff eff Unit
