@@ -33,7 +33,7 @@ module Node.Stream
 import Prelude
 
 import Control.Bind ((<=<))
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..), maybe, fromMaybe)
 import Data.Either (Either(..))
 import Node.Encoding
 import Node.Buffer (Buffer())
@@ -66,6 +66,8 @@ type Writable r = Stream (write :: Write | r)
 -- | A duplex (readable _and_ writable stream)
 type Duplex = Stream (read :: Read, write :: Write)
 
+foreign import undefined :: forall a. a
+
 foreign import data Chunk :: *
 readChunk :: Chunk -> Either String Buffer
 readChunk = readChunkImpl Left Right
@@ -84,26 +86,26 @@ onData r cb =
       Right buf ->
         pure buf
 
-read :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Eff (err :: EXCEPTION | eff) (Maybe Buffer)
-read r = do
-  v <- readEither r
+read :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Maybe Int -> Eff (err :: EXCEPTION | eff) (Maybe Buffer)
+read r size = do
+  v <- readEither r size
   case v of
        Nothing        -> pure Nothing
        Just (Left _)  -> throw "Stream encoding should not be set"
        Just (Right b) -> pure (Just b)
 
-readString :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Encoding -> Eff (err :: EXCEPTION | eff) (Maybe String)
-readString r enc = do
-  v <- readEither r
+readString :: forall w eff. Readable w (err :: EXCEPTION | eff) -> Maybe Int -> Encoding -> Eff (err :: EXCEPTION | eff) (Maybe String)
+readString r size enc = do
+  v <- readEither r size
   case v of
        Nothing          -> pure Nothing
        Just (Left _)    -> throw "Stream encoding should not be set"
        Just (Right buf) -> Just <$> (unsafeInterleaveEff $ Buffer.toString enc buf)
 
-readEither :: forall w eff. Readable w eff -> Eff eff (Maybe (Either String Buffer))
-readEither = readImpl readChunk Nothing Just
+readEither :: forall w eff. Readable w eff -> Maybe Int -> Eff eff (Maybe (Either String Buffer))
+readEither r size = readImpl readChunk Nothing Just r (fromMaybe undefined size)
 
-foreign import readImpl :: forall r eff. (Chunk -> Either String Buffer) -> (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Readable r eff -> Eff eff (Maybe (Either String Buffer))
+foreign import readImpl :: forall r eff. (Chunk -> Either String Buffer) -> (forall a. Maybe a) -> (forall a. a -> Maybe a) -> Readable r eff -> Int -> Eff eff (Maybe (Either String Buffer))
 
 -- | Listen for `data` events, returning data in a String, which will be
 -- | decoded using the given encoding. Note that this will fail if `setEncoding`

@@ -4,6 +4,8 @@
 
 // module Node.Stream
 
+exports.undefined = undefined;
+
 exports.setEncodingImpl = function(s) {
     return function(enc) {
         return function() {
@@ -105,13 +107,15 @@ exports.readImpl = function(readChunk) {
     return function(Nothing) {
         return function(Just) {
             return function(r) {
-                return function() {
-                    const v = r.read();
-                    if (v === null) {
-                        return Nothing;
-                    } else {
-                        return Just(readChunk(v));
-                    }
+                return function(s) {
+                    return function() {
+                        const v = r.read(s);
+                        if (v === null) {
+                            return Nothing;
+                        } else {
+                            return Just(readChunk(v));
+                        }
+                    };
                 };
             };
         };
