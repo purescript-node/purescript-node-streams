@@ -54,11 +54,11 @@ testReads = do
   where
     testReadString = do
       sIn <- passThrough
-      v   <- readString sIn UTF8
+      v   <- readString sIn Nothing UTF8
       assert (isNothing v)
 
       onReadable sIn do
-        str <- readString sIn UTF8
+        str <- readString sIn Nothing UTF8
         assert (isJust str)
         assertEqual (fromJust str) testString
         return unit
@@ -68,11 +68,11 @@ testReads = do
 
     testReadBuf = do
       sIn <- passThrough
-      v   <- read sIn
+      v   <- read sIn Nothing
       assert (isNothing v)
 
       onReadable sIn do
-        buf <- read sIn
+        buf <- read sIn Nothing
         assert (isJust buf)
         assertEqual <$> (Buffer.toString UTF8 (fromJust buf))
                     <*> pure testString
