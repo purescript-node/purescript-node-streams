@@ -6,7 +6,7 @@
   },
   "devDependencies": {
     "jshint": "^2.8.0",
-    "pulp": "^8.2.1",
+    "pulp": "^9.0.0",
     "rimraf": "^2.4.1",
     "stream-buffers": "^3.0.0"
   }

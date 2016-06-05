@@ -1,18 +1,16 @@
 module Test.Main where
 
 import Prelude
-
-import Data.Maybe (Maybe(..), isNothing, isJust)
-import Data.Maybe.Unsafe (fromJust)
-import Data.Either (Either(..))
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (CONSOLE, log)
+import Control.Monad.Eff.Exception (EXCEPTION)
+import Node.Encoding (Encoding(..))
+import Node.Stream (Duplex, Readable, Writable, onDataString, end, writeString, pipe, onDataEither, onData, setEncoding, setDefaultEncoding, read, onReadable, readString)
+import Test.Assert (ASSERT, assert, assert')
 import Node.Buffer as Buffer
-import Node.Encoding
-import Node.Stream
-
-import Control.Monad.Eff
-import Control.Monad.Eff.Console
-
-import Test.Assert
+import Data.Either (Either(..))
+import Data.Maybe (Maybe(..), fromJust, isNothing, isJust)
+import Partial.Unsafe (unsafePartial)
 
 assertEqual :: forall e a. (Show a, Eq a) => a -> a -> Eff (assert :: ASSERT | e) Unit
 assertEqual x y =
@@ -31,6 +29,16 @@ foreign import putImpl :: forall r eff. String -> String -> Readable r (sb :: ST
 put :: forall r eff. String -> Encoding -> Readable r (sb :: STREAM_BUFFER | eff) -> Eff (sb :: STREAM_BUFFER | eff) Unit
 put str enc = putImpl str (show enc)
 
+main
+  :: forall eff
+   . Eff ( console :: CONSOLE
+         , sb :: STREAM_BUFFER
+         , assert :: ASSERT
+         , err :: EXCEPTION
+         , buffer :: Buffer.BUFFER
+         , stream :: PASS_THROUGH
+         , gzip :: GZIP
+         | eff ) Boolean
 main = do
   log "setDefaultEncoding should not affect writing"
   testSetDefaultEncoding
@@ -47,6 +55,13 @@ main = do
 testString :: String
 testString = "üöß💡"
 
+testReads
+  :: forall eff
+   . Eff ( stream :: PASS_THROUGH
+         , err :: EXCEPTION
+         , buffer :: Buffer.BUFFER
+         , assert :: ASSERT
+         | eff ) Boolean
 testReads = do
   testReadString
   testReadBuf
@@ -60,11 +75,11 @@ testReads = do
       onReadable sIn do
         str <- readString sIn Nothing UTF8
         assert (isJust str)
-        assertEqual (fromJust str) testString
-        return unit
+        assertEqual (unsafePartial (fromJust str)) testString
+        pure unit
 
       writeString sIn UTF8 testString do
-        return unit
+        pure unit
 
     testReadBuf = do
       sIn <- passThrough
@@ -74,13 +89,18 @@ testReads = do
       onReadable sIn do
         buf <- read sIn Nothing
         assert (isJust buf)
-        assertEqual <$> (Buffer.toString UTF8 (fromJust buf))
+        assertEqual <$> (Buffer.toString UTF8 (unsafePartial (fromJust buf)))
                     <*> pure testString
-        return unit
+        pure unit
 
       writeString sIn UTF8 testString do
-        return unit
+        pure unit
 
+testSetDefaultEncoding
+  :: forall eff
+   . Eff ( sb :: STREAM_BUFFER
+         , assert :: ASSERT
+         | eff ) Boolean
 testSetDefaultEncoding = do
   w1 <- writableStreamBuffer
   check w1
@@ -95,6 +115,13 @@ testSetDefaultEncoding = do
       c <- getContentsAsString w
       assertEqual testString c
 
+testSetEncoding
+  :: forall eff
+   . Eff ( sb :: STREAM_BUFFER
+         , err :: EXCEPTION
+         , buffer :: Buffer.BUFFER
+         , assert :: ASSERT
+         | eff ) Unit
 testSetEncoding = do
   check UTF8
   check UTF16LE
@@ -108,11 +135,19 @@ testSetEncoding = do
     put testString enc r2
     setEncoding r2 enc
 
-    onData r1 \buf -> do
+    onData r1 \buf -> unsafePartial do
       onDataEither r2 \(Left str) -> do
         assertEqual <$> Buffer.toString enc buf <*> pure testString
         assertEqual str testString
 
+testPipe
+  :: forall eff
+   . Eff ( stream :: PASS_THROUGH
+         , gzip :: GZIP
+         , err :: EXCEPTION
+         , assert :: ASSERT
+         , console :: CONSOLE
+         | eff ) Boolean
 testPipe = do
   sIn   <- passThrough
   sOut  <- passThrough
