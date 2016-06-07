@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "purescript-eff": "^1.0.0",
-    "purescript-node-buffer": "1.0-updates",
+    "purescript-node-buffer": "^1.0.0",
     "purescript-prelude": "^1.0.0",
     "purescript-either": "^1.0.0",
     "purescript-exceptions": "^1.0.0"
