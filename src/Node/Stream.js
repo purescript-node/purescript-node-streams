@@ -2,8 +2,6 @@
 /* global Buffer */
 "use strict";
 
-// module Node.Stream
-
 exports.undefined = undefined;
 
 exports.setEncodingImpl = function(s) {
@@ -109,7 +107,7 @@ exports.readImpl = function(readChunk) {
             return function(r) {
                 return function(s) {
                     return function() {
-                        const v = r.read(s);
+                        var v = r.read(s);
                         if (v === null) {
                             return Nothing;
                         } else {

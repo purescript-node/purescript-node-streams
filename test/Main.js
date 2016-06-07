@@ -1,8 +1,5 @@
 "use strict";
 
-// module Test.Main
-
-
 exports.writableStreamBuffer = function() {
   var W = require('stream-buffers').WritableStreamBuffer;
   return new W;
