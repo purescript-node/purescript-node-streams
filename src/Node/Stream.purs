@@ -7,6 +7,7 @@ module Node.Stream
   , Write()
   , Writable()
   , Duplex()
+  , PassThrough()
   , onData
   , onDataString
   , onDataEither
@@ -64,6 +65,9 @@ type Writable r = Stream (write :: Write | r)
 
 -- | A duplex (readable _and_ writable stream)
 type Duplex = Stream (read :: Read, write :: Write)
+
+-- | A passThrough (readable _and_ writable stream)
+type PassThrough = Stream (read :: Read, write :: Write)
 
 foreign import undefined :: forall a. a
 
@@ -272,7 +276,7 @@ foreign import setDefaultEncodingImpl
 -- | function ensures that the encoding is always supplied explicitly).
 setDefaultEncoding
   :: forall r eff
-   . Writable r eff 
+   . Writable r eff
   -> Encoding
   -> Eff eff Unit
 setDefaultEncoding r enc = setDefaultEncodingImpl r (show enc)
