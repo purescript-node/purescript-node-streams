@@ -32,10 +32,9 @@ module Node.Stream
 
 import Prelude
 
-import Control.Bind ((<=<))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Exception (throw, EXCEPTION(), Error())
-import Control.Monad.Eff.Unsafe (unsafeInterleaveEff)
+import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Node.Buffer (Buffer())
@@ -118,7 +117,7 @@ readString r size enc = do
   case v of
        Nothing          -> pure Nothing
        Just (Left _)    -> throw "Stream encoding should not be set"
-       Just (Right buf) -> Just <$> (unsafeInterleaveEff $ Buffer.toString enc buf)
+       Just (Right buf) -> Just <$> (unsafeCoerceEff $ Buffer.toString enc buf)
 
 readEither
   :: forall w eff
@@ -145,7 +144,7 @@ onDataString
   -> Encoding
   -> (String -> Eff (err :: EXCEPTION | eff) Unit)
   -> Eff (err :: EXCEPTION | eff) Unit
-onDataString r enc cb = onData r (cb <=< unsafeInterleaveEff <<< Buffer.toString enc)
+onDataString r enc cb = onData r (cb <=< unsafeCoerceEff <<< Buffer.toString enc)
 
 -- | Listen for `data` events, returning data in an `Either String Buffer`. This
 -- | function is provided for the (hopefully rare) case that `setEncoding` has
@@ -272,7 +271,7 @@ foreign import setDefaultEncodingImpl
 -- | function ensures that the encoding is always supplied explicitly).
 setDefaultEncoding
   :: forall r eff
-   . Writable r eff 
+   . Writable r eff
   -> Encoding
   -> Eff eff Unit
 setDefaultEncoding r enc = setDefaultEncodingImpl r (show enc)
