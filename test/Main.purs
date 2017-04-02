@@ -1,7 +1,7 @@
 module Test.Main where
 
 import Prelude
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (Eff, kind Effect)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Node.Encoding (Encoding(..))
@@ -12,11 +12,11 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromJust, isNothing, isJust)
 import Partial.Unsafe (unsafePartial)
 
-assertEqual :: forall e a. (Show a, Eq a) => a -> a -> Eff (assert :: ASSERT | e) Unit
+assertEqual :: forall e a. Show a => Eq a => a -> a -> Eff (assert :: ASSERT | e) Unit
 assertEqual x y =
   assert' (show x <> " did not equal " <> show y) (x == y)
 
-foreign import data STREAM_BUFFER :: !
+foreign import data STREAM_BUFFER :: Effect
 
 foreign import writableStreamBuffer :: forall eff. Eff (sb :: STREAM_BUFFER | eff) (Writable () (sb :: STREAM_BUFFER | eff))
 
@@ -34,20 +34,20 @@ main
    . Eff ( console :: CONSOLE
          , sb :: STREAM_BUFFER
          , assert :: ASSERT
-         , err :: EXCEPTION
+         , exception :: EXCEPTION
          , buffer :: Buffer.BUFFER
          , stream :: PASS_THROUGH
          , gzip :: GZIP
          | eff ) Boolean
 main = do
   log "setDefaultEncoding should not affect writing"
-  testSetDefaultEncoding
+  _ <- testSetDefaultEncoding
 
   log "setEncoding should not affect reading"
   testSetEncoding
 
   log "test pipe"
-  testPipe
+  _ <- testPipe
 
   log "test manual reads"
   testReads
@@ -58,12 +58,12 @@ testString = "üöß💡"
 testReads
   :: forall eff
    . Eff ( stream :: PASS_THROUGH
-         , err :: EXCEPTION
+         , exception :: EXCEPTION
          , buffer :: Buffer.BUFFER
          , assert :: ASSERT
          | eff ) Boolean
 testReads = do
-  testReadString
+  _ <- testReadString
   testReadBuf
 
   where
@@ -89,7 +89,7 @@ testReads = do
       onReadable sIn do
         buf <- read sIn Nothing
         assert (isJust buf)
-        assertEqual <$> (Buffer.toString UTF8 (unsafePartial (fromJust buf)))
+        _ <- assertEqual <$> (Buffer.toString UTF8 (unsafePartial (fromJust buf)))
                     <*> pure testString
         pure unit
 
@@ -103,7 +103,7 @@ testSetDefaultEncoding
          | eff ) Boolean
 testSetDefaultEncoding = do
   w1 <- writableStreamBuffer
-  check w1
+  _ <- check w1
 
   w2 <- writableStreamBuffer
   setDefaultEncoding w2 UCS2
@@ -118,7 +118,7 @@ testSetDefaultEncoding = do
 testSetEncoding
   :: forall eff
    . Eff ( sb :: STREAM_BUFFER
-         , err :: EXCEPTION
+         , exception :: EXCEPTION
          , buffer :: Buffer.BUFFER
          , assert :: ASSERT
          | eff ) Unit
@@ -137,14 +137,14 @@ testSetEncoding = do
 
     onData r1 \buf -> unsafePartial do
       onDataEither r2 \(Left str) -> do
-        assertEqual <$> Buffer.toString enc buf <*> pure testString
+        _ <- assertEqual <$> Buffer.toString enc buf <*> pure testString
         assertEqual str testString
 
 testPipe
   :: forall eff
    . Eff ( stream :: PASS_THROUGH
          , gzip :: GZIP
-         , err :: EXCEPTION
+         , exception :: EXCEPTION
          , assert :: ASSERT
          , console :: CONSOLE
          | eff ) Boolean
@@ -155,23 +155,23 @@ testPipe = do
   unzip <- createGunzip
 
   log "pipe 1"
-  sIn `pipe` zip
+  _ <- sIn `pipe` zip
   log "pipe 2"
-  zip `pipe` unzip
+  _ <- zip `pipe` unzip
   log "pipe 3"
-  unzip `pipe` sOut
+  _ <- unzip `pipe` sOut
 
   writeString sIn UTF8 testString do
     end sIn do
       onDataString sOut UTF8 \str -> do
         assertEqual str testString
 
-foreign import data GZIP :: !
+foreign import data GZIP :: Effect
 
 foreign import createGzip :: forall eff. Eff (gzip :: GZIP | eff) (Duplex (gzip :: GZIP | eff))
 foreign import createGunzip :: forall eff. Eff (gzip :: GZIP | eff) (Duplex (gzip :: GZIP | eff))
 
-foreign import data PASS_THROUGH :: !
+foreign import data PASS_THROUGH :: Effect
 
 -- | Create a PassThrough stream, which simply writes its input to its output.
 foreign import passThrough :: forall eff. Eff (stream :: PASS_THROUGH | eff) (Duplex (stream :: PASS_THROUGH | eff))

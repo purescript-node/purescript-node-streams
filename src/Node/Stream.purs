@@ -32,7 +32,7 @@ module Node.Stream
 
 import Prelude
 
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (Eff, kind Effect)
 import Control.Monad.Eff.Exception (throw, EXCEPTION(), Error())
 import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
 import Data.Either (Either(..))
@@ -47,7 +47,7 @@ import Node.Encoding (Encoding)
 -- |
 -- | - Whether reading and/or writing from/to the stream are allowed.
 -- | - Effects associated with reading/writing from/to this stream.
-foreign import data Stream :: # * -> # ! -> *
+foreign import data Stream :: # Type -> # Effect -> Type
 
 -- | A phantom type associated with _readable streams_.
 data Read
@@ -66,7 +66,7 @@ type Duplex = Stream (read :: Read, write :: Write)
 
 foreign import undefined :: forall a. a
 
-foreign import data Chunk :: *
+foreign import data Chunk :: Type
 
 foreign import readChunkImpl
   :: (forall l r. l -> Either l r)
@@ -81,9 +81,9 @@ readChunk = readChunkImpl Left Right
 -- | if `setEncoding` has been called on the stream.
 onData
   :: forall w eff
-   . Readable w (err :: EXCEPTION | eff)
-  -> (Buffer -> Eff (err :: EXCEPTION | eff) Unit)
-  -> Eff (err :: EXCEPTION | eff) Unit
+   . Readable w (exception :: EXCEPTION | eff)
+  -> (Buffer -> Eff (exception :: EXCEPTION | eff) Unit)
+  -> Eff (exception :: EXCEPTION | eff) Unit
 onData r cb =
   onDataEither r (cb <=< fromEither)
   where
@@ -96,9 +96,9 @@ onData r cb =
 
 read
   :: forall w eff
-   . Readable w (err :: EXCEPTION | eff)
+   . Readable w (exception :: EXCEPTION | eff)
    -> Maybe Int
-   -> Eff (err :: EXCEPTION | eff) (Maybe Buffer)
+   -> Eff (exception :: EXCEPTION | eff) (Maybe Buffer)
 read r size = do
   v <- readEither r size
   case v of
@@ -108,10 +108,10 @@ read r size = do
 
 readString
   :: forall w eff
-   . Readable w (err :: EXCEPTION | eff)
+   . Readable w (exception :: EXCEPTION | eff)
   -> Maybe Int
   -> Encoding
-  -> Eff (err :: EXCEPTION | eff) (Maybe String)
+  -> Eff (exception :: EXCEPTION | eff) (Maybe String)
 readString r size enc = do
   v <- readEither r size
   case v of
@@ -140,10 +140,10 @@ foreign import readImpl
 -- | has been called on the stream.
 onDataString
   :: forall w eff
-   . Readable w (err :: EXCEPTION | eff)
+   . Readable w (exception :: EXCEPTION | eff)
   -> Encoding
-  -> (String -> Eff (err :: EXCEPTION | eff) Unit)
-  -> Eff (err :: EXCEPTION | eff) Unit
+  -> (String -> Eff (exception :: EXCEPTION | eff) Unit)
+  -> Eff (exception :: EXCEPTION | eff) Unit
 onDataString r enc cb = onData r (cb <=< unsafeCoerceEff <<< Buffer.toString enc)
 
 -- | Listen for `data` events, returning data in an `Either String Buffer`. This
@@ -151,9 +151,9 @@ onDataString r enc cb = onData r (cb <=< unsafeCoerceEff <<< Buffer.toString enc
 -- | been called on the stream.
 onDataEither
   :: forall r eff
-   . Readable r (err :: EXCEPTION | eff)
-  -> (Either String Buffer -> Eff (err :: EXCEPTION | eff) Unit)
-  -> Eff (err :: EXCEPTION | eff) Unit
+   . Readable r (exception :: EXCEPTION | eff)
+  -> (Either String Buffer -> Eff (exception :: EXCEPTION | eff) Unit)
+  -> Eff (exception :: EXCEPTION | eff) Unit
 onDataEither r cb = onDataEitherImpl readChunk r cb
 
 foreign import onDataEitherImpl
