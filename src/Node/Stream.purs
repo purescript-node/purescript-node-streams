@@ -13,6 +13,7 @@ module Node.Stream
   , setEncoding
   , onReadable
   , onEnd
+  , onFinish
   , onClose
   , onError
   , resume
@@ -193,6 +194,13 @@ foreign import onReadable
 foreign import onEnd
   :: forall w eff
    . Readable w eff
+  -> Eff eff Unit
+  -> Eff eff Unit
+
+-- | Listen for `finish` events.
+foreign import onFinish
+  :: forall w eff
+   . Writable w eff
   -> Eff eff Unit
   -> Eff eff Unit
 
