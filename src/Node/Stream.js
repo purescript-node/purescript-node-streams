@@ -47,6 +47,14 @@ exports.onEnd = function (s) {
   };
 };
 
+exports.onFinish = function (s) {
+  return function (f) {
+    return function () {
+      s.on("finish", f);
+    };
+  };
+};
+
 exports.onReadable = function (s) {
   return function (f) {
     return function () {
