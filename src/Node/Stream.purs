@@ -207,14 +207,14 @@ foreign import onFinish
 -- | Listen for `close` events.
 foreign import onClose
   :: forall w eff
-   . Readable w eff
+   . Stream w eff
   -> Eff eff Unit
   -> Eff eff Unit
 
 -- | Listen for `error` events.
 foreign import onError
   :: forall w eff
-   . Readable w eff
+   . Stream w eff
   -> (Error -> Eff eff Unit)
   -> Eff eff Unit
 
