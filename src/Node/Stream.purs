@@ -20,6 +20,8 @@ module Node.Stream
   , pause
   , isPaused
   , pipe
+  , unpipe
+  , unpipeAll
   , read
   , readString
   , readEither
@@ -29,6 +31,7 @@ module Node.Stream
   , uncork
   , setDefaultEncoding
   , end
+  , destroy
   ) where
 
 import Prelude
@@ -234,6 +237,19 @@ foreign import pipe
   -> Writable r eff
   -> Eff eff (Writable r eff)
 
+-- | Detach a Writable stream previously attached using `pipe`.
+foreign import unpipe
+  :: forall r w eff
+   . Readable w eff
+  -> Writable r eff
+  -> Eff eff Unit
+
+-- | Detach all Writable streams previously attached using `pipe`.
+foreign import unpipeAll
+  :: forall w eff
+   . Readable w eff
+  -> Eff eff Unit
+
 -- | Write a Buffer to a writable stream.
 foreign import write
   :: forall r eff
@@ -289,4 +305,21 @@ foreign import end
   :: forall r eff
    . Writable r eff
   -> Eff eff Unit
+  -> Eff eff Unit
+
+-- | Destroy the stream. It will release any internal resources.
+--
+-- Added in node 8.0.
+foreign import destroy
+  :: forall r eff
+   . Stream r eff
+  -> Eff eff Unit
+
+-- | Destroy the stream and emit 'error'.
+--
+-- Added in node 8.0.
+foreign import destroyWithError
+  :: forall r eff
+   . Stream r eff
+  -> Error
   -> Eff eff Unit
