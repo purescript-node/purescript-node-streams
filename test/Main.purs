@@ -1,9 +1,8 @@
 module Test.Main where
 
 import Prelude
-import Control.Monad.Eff (Eff, kind Effect)
-import Control.Monad.Eff.Console (CONSOLE, log)
-import Control.Monad.Eff.Exception (EXCEPTION)
+import Effect (Effect)
+import Effect.Console (log)
 import Node.Encoding (Encoding(..))
 import Node.Stream (Duplex, Readable, Writable, onDataString, end, writeString, pipe, onDataEither, onData, setEncoding, setDefaultEncoding, read, onReadable, readString)
 import Test.Assert (ASSERT, assert, assert')
@@ -16,7 +15,6 @@ assertEqual :: forall e a. Show a => Eq a => a -> a -> Eff (assert :: ASSERT | e
 assertEqual x y =
   assert' (show x <> " did not equal " <> show y) (x == y)
 
-foreign import data STREAM_BUFFER :: Effect
 
 foreign import writableStreamBuffer :: forall eff. Eff (sb :: STREAM_BUFFER | eff) (Writable () (sb :: STREAM_BUFFER | eff))
 
@@ -166,12 +164,10 @@ testPipe = do
       onDataString sOut UTF8 \str -> do
         assertEqual str testString
 
-foreign import data GZIP :: Effect
 
 foreign import createGzip :: forall eff. Eff (gzip :: GZIP | eff) (Duplex (gzip :: GZIP | eff))
 foreign import createGunzip :: forall eff. Eff (gzip :: GZIP | eff) (Duplex (gzip :: GZIP | eff))
 
-foreign import data PASS_THROUGH :: Effect
 
 -- | Create a PassThrough stream, which simply writes its input to its output.
 foreign import passThrough :: forall eff. Eff (stream :: PASS_THROUGH | eff) (Duplex (stream :: PASS_THROUGH | eff))
