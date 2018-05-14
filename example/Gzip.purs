@@ -2,16 +2,15 @@ module Gzip where
 
 import Prelude
 
-import Node.Stream
-
-import Effect
-import Effect.Console
+import Effect (Effect)
+import Node.Stream (Duplex, Readable, Writable, pipe)
 
 
-foreign import gzip :: forall eff. Eff (gzip :: GZIP | eff) (Duplex (gzip :: GZIP | eff))
-foreign import stdin :: forall eff. Readable () (console :: CONSOLE | eff)
-foreign import stdout :: forall eff. Writable () (console :: CONSOLE | eff)
+foreign import gzip :: Effect Duplex
+foreign import stdin :: Readable ()
+foreign import stdout :: Writable ()
 
+main :: Effect (Writable ())
 main = do
   z <- gzip
   _ <- stdin `pipe` z

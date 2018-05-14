@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "purescript-effect": "#compiler/0.12",
-    "purescript-node-buffer": "justinwoo/purescript-node-buffer#compiler/0.12",
+    "purescript-node-buffer": "#compiler/0.12",
     "purescript-prelude": "#compiler/0.12",
     "purescript-either": "#compiler/0.12",
     "purescript-exceptions": "#compiler/0.12"
