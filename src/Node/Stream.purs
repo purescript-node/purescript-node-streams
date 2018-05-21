@@ -1,4 +1,4 @@
--- | This module provides a low-level wrapper for the Node Stream API.
+-- | This module provides a low-level wrapper for the [Node Stream API](https://nodejs.org/api/stream.html).
 
 module Node.Stream
   ( Stream()
