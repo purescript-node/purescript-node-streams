@@ -2,15 +2,16 @@
   "private": true,
   "scripts": {
     "clean": "rimraf output && rimraf .pulp-cache",
-    "build": "jshint src && jscs src && pulp build -- --censor-lib --strict",
+    "build": "eslint src && pulp build -- --censor-lib --strict",
+    "example:build": "eslint example && pulp build -I example -- --censor-lib --strict",
+    "example": "eslint example && pulp run -I example -m Gzip",
     "test": "pulp test"
   },
   "devDependencies": {
-    "jscs": "^3.0.7",
-    "jshint": "^2.9.4",
-    "pulp": "^11.0.0",
-    "purescript-psa": "^0.5.0",
-    "rimraf": "^2.6.1",
+    "eslint": "^4.11.0",
+    "pulp": "^12.0.1",
+    "purescript-psa": "^0.5.1",
+    "rimraf": "^2.6.2",
     "stream-buffers": "^3.0.1"
   }
 }
