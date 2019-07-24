@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "purescript-effect": "^2.0.0",
-    "purescript-node-buffer": "^5.0.0",
+    "purescript-node-buffer": ">=5.0.0 <7.0.0",
     "purescript-prelude": "^4.0.0",
     "purescript-either": "^4.0.0",
     "purescript-exceptions": "^4.0.0"
