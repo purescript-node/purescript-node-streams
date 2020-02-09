@@ -192,6 +192,13 @@ foreign import onReadable
   -> Effect Unit
   -> Effect Unit
 
+-- | Listen for `drain` event only once.
+foreign import onceDrain
+  :: forall w
+   . Readable w
+  -> Effect Unit
+  -> Effect Unit
+
 -- | Listen for `end` events.
 foreign import onEnd
   :: forall w

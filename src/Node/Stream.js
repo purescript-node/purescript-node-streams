@@ -39,6 +39,14 @@ exports.onDataEitherImpl = function (readChunk) {
   };
 };
 
+exports.onceDrain = function (s) {
+  return function (f) {
+    return function () {
+      s.once("drain", f);
+    };
+  };
+};
+
 exports.onEnd = function (s) {
   return function (f) {
     return function () {
