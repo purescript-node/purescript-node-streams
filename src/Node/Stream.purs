@@ -86,7 +86,7 @@ onData
   :: forall w
    . Readable w
   -> (Buffer -> Effect Unit)
-  -> Effect Unit
+  -> Effect (Effect Unit)
 onData r cb =
   onDataEither r (cb <=< fromEither)
   where
@@ -146,7 +146,7 @@ onDataString
    . Readable w
   -> Encoding
   -> (String -> Effect Unit)
-  -> Effect Unit
+  -> Effect (Effect Unit)
 onDataString r enc cb = onData r (cb <=< Buffer.toString enc)
 
 -- | Listen for `data` events, returning data in an `Either String Buffer`. This
@@ -156,7 +156,7 @@ onDataEither
   :: forall r
    . Readable r
   -> (Either String Buffer -> Effect Unit)
-  -> Effect Unit
+  -> Effect (Effect Unit)
 onDataEither r cb = onDataEitherImpl readChunk r cb
 
 foreign import onDataEitherImpl
@@ -164,7 +164,7 @@ foreign import onDataEitherImpl
    . (Chunk -> Either String Buffer)
   -> Readable r
   -> (Either String Buffer -> Effect Unit)
-  -> Effect Unit
+  -> Effect (Effect Unit)
 
 foreign import setEncodingImpl
   :: forall w
@@ -190,35 +190,35 @@ foreign import onReadable
   :: forall w
    . Readable w
   -> Effect Unit
-  -> Effect Unit
+  -> Effect (Effect Unit)
 
 -- | Listen for `end` events.
 foreign import onEnd
   :: forall w
    . Readable w
   -> Effect Unit
-  -> Effect Unit
+  -> Effect (Effect Unit)
 
 -- | Listen for `finish` events.
 foreign import onFinish
   :: forall w
    . Writable w
   -> Effect Unit
-  -> Effect Unit
+  -> Effect (Effect Unit)
 
 -- | Listen for `close` events.
 foreign import onClose
   :: forall w
    . Stream w
   -> Effect Unit
-  -> Effect Unit
+  -> Effect (Effect Unit)
 
 -- | Listen for `error` events.
 foreign import onError
   :: forall w
    . Stream w
   -> (Error -> Effect Unit)
-  -> Effect Unit
+  -> Effect (Effect Unit)
 
 -- | Resume reading from the stream.
 foreign import resume :: forall w. Readable w -> Effect Unit
