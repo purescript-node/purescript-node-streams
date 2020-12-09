@@ -1,3 +1,4 @@
+/* global Buffer */
 "use strict";
 
 exports.undefined = undefined;
@@ -20,8 +21,9 @@ exports.readChunkImpl = function (Left) {
       } else {
         throw new Error(
           "Node.Stream.readChunkImpl: Unrecognised " +
-          "chunk type; expected String or Buffer, got: " +
-          chunk);
+            "chunk type; expected String or Buffer, got: " +
+            chunk
+        );
       }
     };
   };
