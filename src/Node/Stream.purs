@@ -50,7 +50,7 @@ import Node.Encoding (Encoding)
 -- |
 -- | - Whether reading and/or writing from/to the stream are allowed.
 -- | - Effects associated with reading/writing from/to this stream.
-foreign import data Stream :: # Type -> Type
+foreign import data Stream :: Row Type -> Type
 
 -- | A phantom type associated with _readable streams_.
 data Read
