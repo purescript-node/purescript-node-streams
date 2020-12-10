@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "purescript-effect": "master",
-    "purescript-node-buffer": ">=5.0.0 <7.0.0",
+    "purescript-node-buffer": "master",
     "purescript-prelude": "master",
     "purescript-either": "master",
     "purescript-exceptions": "master"
