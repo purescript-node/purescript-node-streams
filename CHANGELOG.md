@@ -12,17 +12,26 @@ Bugfixes:
 
 Other improvements:
 
+## [v5.0.0](https://github.com/purescript-node/purescript-posix-types/releases/tag/v5.0.0) - 2021-MONTH-DAY
+
+Breaking changes:
+  - Added support for PureScript 0.14 and dropped support for all previous versions (#31)
+
+Other improvements:
+  - Migrated CI to GitHub Actions, updated installation instructions to use Spago, and switched from `jshint` to `eslint` (#30)
+  - Added a changelog and pull request template (#32)
+
 ## [v4.0.1](https://github.com/purescript-node/purescript-node-streams/releases/tag/v4.0.1) - 2019-07-24
 
-Relax upper bound on `purescript-node-buffer`
+- Relax upper bound on `purescript-node-buffer`
 
 ## [v4.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v4.0.0) - 2018-05-27
 
-Updated for PureScript 0.12
+- Updated for PureScript 0.12
 
 ## [v3.3.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v3.3.0) - 2017-11-29
 
-Add `unpipe` and `destroy` functions (@matthewleon)
+- Added `unpipe` and `destroy` functions (@matthewleon)
 
 ## [v3.2.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v3.2.0) - 2017-11-26
 
@@ -30,11 +39,11 @@ Add `unpipe` and `destroy` functions (@matthewleon)
 
 ## [v3.1.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v3.1.0) - 2017-04-20
 
-Add `onFinish` event (@felixSchl)
+- Added `onFinish` event (@felixSchl)
 
 ## [v3.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v3.0.0) - 2017-04-04
 
-Updates for 0.11 (@anilanar)
+- Updated for 0.11 (@anilanar)
 
 ## [v2.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v2.0.0) - 2016-10-17
 
@@ -46,28 +55,28 @@ Updates for 0.11 (@anilanar)
 
 ## [v0.6.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.6.0) - 2016-05-25
 
-- Make the `size` parameter available to the `read` functions (@felixSchl).
+- Made the `size` parameter available to the `read` functions (@felixSchl).
 
 ## [v0.5.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.5.0) - 2016-05-20
 
-- Add `read`, `readString`, `readEither`, and `onReadable` (@felixSchl)
+- Added `read`, `readString`, `readEither`, and `onReadable` (@felixSchl)
 
 ## [v0.4.1](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.4.1) - 2016-05-02
 
-Fix license in bower.json for Pursuit.
+- Fixed license in bower.json for Pursuit.
 
 ## [v0.4.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.4.0) - 2016-03-31
 
-- Make the `Error` value available to the `onError` callback.
+- Made the `Error` value available to the `onError` callback.
 
 ## [v0.3.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.3.0) - 2015-12-14
 
-- Remove the last type parameter to `Stream` (#4)
-- Add `onDataEither`, for reading from a stream that might or might not have an encoding set. (#4)
+- Removed the last type parameter to `Stream` (#4)
+- Added `onDataEither`, for reading from a stream that might or might not have an encoding set. (#4)
 
 ## [v0.2.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.2.0) - 2015-12-09
 
-Updated dependencies
+- Updated dependencies
 
 ## [v0.1.4](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.1.4) - 2015-12-05
 
@@ -75,17 +84,16 @@ Updated dependencies
 
 ## [v0.1.3](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.1.3) - 2015-10-02
 
-Fix an issue in the FFI.
+- Fixed an issue in the FFI.
 
 ## [v0.1.2](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.1.2) - 2015-09-24
 
-Fix some JS errors.
+- Fixed some JS errors.
 
 ## [v0.1.1](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.1.1) - 2015-09-23
 
-Pursuit
+- Released to Pursuit
 
 ## [v0.1.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v0.1.0) - 2015-09-23
 
-Initial release.
-
+- Initial release.
