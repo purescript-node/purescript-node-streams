@@ -33,9 +33,15 @@ exports.onDataEitherImpl = function (readChunk) {
   return function (r) {
     return function (f) {
       return function () {
-        r.on("data", function (data) {
+        var listener = function (data) {
           f(readChunk(data))();
-        });
+        };
+
+        r.on("data", listener);
+
+        return function () {
+          r.off("data", listener)
+        }
       };
     };
   };
@@ -45,6 +51,10 @@ exports.onEnd = function (s) {
   return function (f) {
     return function () {
       s.on("end", f);
+
+      return function () {
+        s.off("end", f);
+      }
     };
   };
 };
@@ -53,6 +63,10 @@ exports.onFinish = function (s) {
   return function (f) {
     return function () {
       s.on("finish", f);
+
+      return function () {
+        s.off("finish", f);
+      }
     };
   };
 };
@@ -61,6 +75,10 @@ exports.onReadable = function (s) {
   return function (f) {
     return function () {
       s.on("readable", f);
+
+      return function () {
+        s.off("readable", f);
+      }
     };
   };
 };
@@ -68,9 +86,15 @@ exports.onReadable = function (s) {
 exports.onError = function (s) {
   return function (f) {
     return function () {
-      s.on("error", function (e) {
+      var listener = function (e) {
         f(e)();
-      });
+      };
+
+      s.on("error", listener);
+
+      return function () {
+        s.off("error", listener);
+      }
     };
   };
 };
@@ -79,6 +103,10 @@ exports.onClose = function (s) {
   return function (f) {
     return function () {
       s.on("close", f);
+
+      return function () {
+        s.off("close", f);
+      }
     };
   };
 };

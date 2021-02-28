@@ -56,7 +56,7 @@ testReads = do
       v   <- readString sIn Nothing UTF8
       assert (isNothing v)
 
-      onReadable sIn do
+      void $ onReadable sIn do
         str <- readString sIn Nothing UTF8
         assert (isJust str)
         assertEqual (unsafePartial (fromJust str)) testString
@@ -70,7 +70,7 @@ testReads = do
       v   <- read sIn Nothing
       assert (isNothing v)
 
-      onReadable sIn do
+      void $ onReadable sIn do
         buf <- read sIn Nothing
         assert (isJust buf)
         _ <- assertEqual <$> (Buffer.toString UTF8 (unsafePartial (fromJust buf)))
@@ -109,8 +109,8 @@ testSetEncoding = do
     put testString enc r2
     setEncoding r2 enc
 
-    onData r1 \buf -> unsafePartial do
-      onDataEither r2 \(Left str) -> do
+    void $ onData r1 \buf -> unsafePartial do
+      void $ onDataEither r2 \(Left str) -> do
         _ <- assertEqual <$> Buffer.toString enc buf <*> pure testString
         assertEqual str testString
 
@@ -130,7 +130,7 @@ testPipe = do
 
   writeString sIn UTF8 testString do
     end sIn do
-      onDataString sOut UTF8 \str -> do
+      void $ onDataString sOut UTF8 \str -> do
         assertEqual str testString
 
 
