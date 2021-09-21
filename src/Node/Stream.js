@@ -1,3 +1,4 @@
+/* global Buffer */
 "use strict";
 
 exports.undefined = undefined;
@@ -20,8 +21,9 @@ exports.readChunkImpl = function (Left) {
       } else {
         throw new Error(
           "Node.Stream.readChunkImpl: Unrecognised " +
-          "chunk type; expected String or Buffer, got: " +
-          chunk);
+            "chunk type; expected String or Buffer, got: " +
+            chunk
+        );
       }
     };
   };
@@ -107,6 +109,20 @@ exports.pipe = function (r) {
   };
 };
 
+exports.unpipe = function (r) {
+  return function (w) {
+    return function () {
+      return r.unpipe(w);
+    };
+  };
+};
+
+exports.unpipeAll = function (r) {
+  return function () {
+    return r.unpipe();
+  };
+};
+
 exports.readImpl = function (readChunk) {
   return function (Nothing) {
     return function (Just) {
@@ -174,6 +190,20 @@ exports.end = function (w) {
       w.end(null, null, function () {
         done();
       });
+    };
+  };
+};
+
+exports.destroy = function (strm) {
+  return function () {
+    strm.destroy(null);
+  };
+};
+
+exports.destroyWithError = function (strm) {
+  return function (e) {
+    return function () {
+      strm.destroy(e);
     };
   };
 };

@@ -1,4 +1,4 @@
--- | This module provides a low-level wrapper for the Node Stream API.
+-- | This module provides a low-level wrapper for the [Node Stream API](https://nodejs.org/api/stream.html).
 
 module Node.Stream
   ( Stream()
@@ -20,6 +20,8 @@ module Node.Stream
   , pause
   , isPaused
   , pipe
+  , unpipe
+  , unpipeAll
   , read
   , readString
   , readEither
@@ -29,13 +31,13 @@ module Node.Stream
   , uncork
   , setDefaultEncoding
   , end
+  , destroy
   ) where
 
 import Prelude
 
-import Control.Monad.Eff (Eff, kind Effect)
-import Control.Monad.Eff.Exception (throw, EXCEPTION(), Error())
-import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
+import Effect (Effect)
+import Effect.Exception (throw, Error())
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Node.Buffer (Buffer())
@@ -48,7 +50,7 @@ import Node.Encoding (Encoding)
 -- |
 -- | - Whether reading and/or writing from/to the stream are allowed.
 -- | - Effects associated with reading/writing from/to this stream.
-foreign import data Stream :: # Type -> # Effect -> Type
+foreign import data Stream :: Row Type -> Type
 
 -- | A phantom type associated with _readable streams_.
 data Read
@@ -81,10 +83,10 @@ readChunk = readChunkImpl Left Right
 -- | Listen for `data` events, returning data in a Buffer. Note that this will fail
 -- | if `setEncoding` has been called on the stream.
 onData
-  :: forall w eff
-   . Readable w (exception :: EXCEPTION | eff)
-  -> (Buffer -> Eff (exception :: EXCEPTION | eff) Unit)
-  -> Eff (exception :: EXCEPTION | eff) Unit
+  :: forall w
+   . Readable w
+  -> (Buffer -> Effect Unit)
+  -> Effect Unit
 onData r cb =
   onDataEither r (cb <=< fromEither)
   where
@@ -96,10 +98,10 @@ onData r cb =
         pure buf
 
 read
-  :: forall w eff
-   . Readable w (exception :: EXCEPTION | eff)
+  :: forall w
+   . Readable w
    -> Maybe Int
-   -> Eff (exception :: EXCEPTION | eff) (Maybe Buffer)
+   -> Effect (Maybe Buffer)
 read r size = do
   v <- readEither r size
   case v of
@@ -108,67 +110,67 @@ read r size = do
     Just (Right b) -> pure (Just b)
 
 readString
-  :: forall w eff
-   . Readable w (exception :: EXCEPTION | eff)
+  :: forall w
+   . Readable w
   -> Maybe Int
   -> Encoding
-  -> Eff (exception :: EXCEPTION | eff) (Maybe String)
+  -> Effect (Maybe String)
 readString r size enc = do
   v <- readEither r size
   case v of
        Nothing          -> pure Nothing
        Just (Left _)    -> throw "Stream encoding should not be set"
-       Just (Right buf) -> Just <$> (unsafeCoerceEff $ Buffer.toString enc buf)
+       Just (Right buf) -> Just <$> Buffer.toString enc buf
 
 readEither
-  :: forall w eff
-   . Readable w eff
+  :: forall w
+   . Readable w
   -> Maybe Int
-  -> Eff eff (Maybe (Either String Buffer))
+  -> Effect (Maybe (Either String Buffer))
 readEither r size = readImpl readChunk Nothing Just r (fromMaybe undefined size)
 
 foreign import readImpl
-  :: forall r eff
+  :: forall r
    . (Chunk -> Either String Buffer)
   -> (forall a. Maybe a)
   -> (forall a. a -> Maybe a)
-  -> Readable r eff
+  -> Readable r
   -> Int
-  -> Eff eff (Maybe (Either String Buffer))
+  -> Effect (Maybe (Either String Buffer))
 
 -- | Listen for `data` events, returning data in a String, which will be
 -- | decoded using the given encoding. Note that this will fail if `setEncoding`
 -- | has been called on the stream.
 onDataString
-  :: forall w eff
-   . Readable w (exception :: EXCEPTION | eff)
+  :: forall w
+   . Readable w
   -> Encoding
-  -> (String -> Eff (exception :: EXCEPTION | eff) Unit)
-  -> Eff (exception :: EXCEPTION | eff) Unit
-onDataString r enc cb = onData r (cb <=< unsafeCoerceEff <<< Buffer.toString enc)
+  -> (String -> Effect Unit)
+  -> Effect Unit
+onDataString r enc cb = onData r (cb <=< Buffer.toString enc)
 
 -- | Listen for `data` events, returning data in an `Either String Buffer`. This
 -- | function is provided for the (hopefully rare) case that `setEncoding` has
 -- | been called on the stream.
 onDataEither
-  :: forall r eff
-   . Readable r (exception :: EXCEPTION | eff)
-  -> (Either String Buffer -> Eff (exception :: EXCEPTION | eff) Unit)
-  -> Eff (exception :: EXCEPTION | eff) Unit
+  :: forall r
+   . Readable r
+  -> (Either String Buffer -> Effect Unit)
+  -> Effect Unit
 onDataEither r cb = onDataEitherImpl readChunk r cb
 
 foreign import onDataEitherImpl
-  :: forall r eff
+  :: forall r
    . (Chunk -> Either String Buffer)
-  -> Readable r eff
-  -> (Either String Buffer -> Eff eff Unit)
-  -> Eff eff Unit
+  -> Readable r
+  -> (Either String Buffer -> Effect Unit)
+  -> Effect Unit
 
 foreign import setEncodingImpl
-  :: forall w eff
-   . Readable w eff
+  :: forall w
+   . Readable w
   -> String
-  -> Eff eff Unit
+  -> Effect Unit
 
 -- | Set the encoding used to read chunks as strings from the stream. This
 -- | function may be useful when you are passing a readable stream to some other
@@ -177,100 +179,113 @@ foreign import setEncodingImpl
 -- | Where possible, you should try to use `onDataString` instead of this
 -- | function.
 setEncoding
-  :: forall w eff
-   . Readable w eff
+  :: forall w
+   . Readable w
   -> Encoding
-  -> Eff eff Unit
+  -> Effect Unit
 setEncoding r enc = setEncodingImpl r (show enc)
 
 -- | Listen for `readable` events.
 foreign import onReadable
-  :: forall w eff
-   . Readable w eff
-  -> Eff eff Unit
-  -> Eff eff Unit
+  :: forall w
+   . Readable w
+  -> Effect Unit
+  -> Effect Unit
 
 -- | Listen for `end` events.
 foreign import onEnd
-  :: forall w eff
-   . Readable w eff
-  -> Eff eff Unit
-  -> Eff eff Unit
+  :: forall w
+   . Readable w
+  -> Effect Unit
+  -> Effect Unit
 
 -- | Listen for `finish` events.
 foreign import onFinish
-  :: forall w eff
-   . Writable w eff
-  -> Eff eff Unit
-  -> Eff eff Unit
+  :: forall w
+   . Writable w
+  -> Effect Unit
+  -> Effect Unit
 
 -- | Listen for `close` events.
 foreign import onClose
-  :: forall w eff
-   . Stream w eff
-  -> Eff eff Unit
-  -> Eff eff Unit
+  :: forall w
+   . Stream w
+  -> Effect Unit
+  -> Effect Unit
 
 -- | Listen for `error` events.
 foreign import onError
-  :: forall w eff
-   . Stream w eff
-  -> (Error -> Eff eff Unit)
-  -> Eff eff Unit
+  :: forall w
+   . Stream w
+  -> (Error -> Effect Unit)
+  -> Effect Unit
 
 -- | Resume reading from the stream.
-foreign import resume :: forall w eff. Readable w eff -> Eff eff Unit
+foreign import resume :: forall w. Readable w -> Effect Unit
 
 -- | Pause reading from the stream.
-foreign import pause :: forall w eff. Readable w eff -> Eff eff Unit
+foreign import pause :: forall w. Readable w -> Effect Unit
 
 -- | Check whether or not a stream is paused for reading.
-foreign import isPaused :: forall w eff. Readable w eff -> Eff eff Boolean
+foreign import isPaused :: forall w. Readable w -> Effect Boolean
 
 -- | Read chunks from a readable stream and write them to a writable stream.
 foreign import pipe
-  :: forall r w eff
-   . Readable w eff
-  -> Writable r eff
-  -> Eff eff (Writable r eff)
+  :: forall r w
+   . Readable w
+  -> Writable r
+  -> Effect (Writable r)
+
+-- | Detach a Writable stream previously attached using `pipe`.
+foreign import unpipe
+  :: forall r w
+   . Readable w
+  -> Writable r
+  -> Effect Unit
+
+-- | Detach all Writable streams previously attached using `pipe`.
+foreign import unpipeAll
+  :: forall w
+   . Readable w
+  -> Effect Unit
 
 -- | Write a Buffer to a writable stream.
 foreign import write
-  :: forall r eff
-   . Writable r eff
+  :: forall r
+   . Writable r
   -> Buffer
-  -> Eff eff Unit
-  -> Eff eff Boolean
+  -> Effect Unit
+  -> Effect Boolean
 
 foreign import writeStringImpl
-  :: forall r eff
-   . Writable r eff
+  :: forall r
+   . Writable r
   -> String
   -> String
-  -> Eff eff Unit
-  -> Eff eff Boolean
+  -> Effect Unit
+  -> Effect Boolean
 
 -- | Write a string in the specified encoding to a writable stream.
 writeString
-  :: forall r eff
-   . Writable r eff
+  :: forall r
+   . Writable r
   -> Encoding
   -> String
-  -> Eff eff Unit
-  -> Eff eff Boolean
+  -> Effect Unit
+  -> Effect Boolean
 writeString w enc = writeStringImpl w (show enc)
 
 -- | Force buffering of writes.
-foreign import cork :: forall r eff. Writable r eff -> Eff eff Unit
+foreign import cork :: forall r. Writable r -> Effect Unit
 
 -- | Flush buffered data.
-foreign import uncork :: forall r eff. Writable r eff -> Eff eff Unit
+foreign import uncork :: forall r. Writable r -> Effect Unit
 
 foreign import setDefaultEncodingImpl
-  :: forall r eff
-   . Writable r eff
+  :: forall r
+   . Writable r
   -> String
-  -> Eff eff Unit
+  -> Effect Unit
 
 -- | Set the default encoding used to write strings to the stream. This function
 -- | is useful when you are passing a writable stream to some other JavaScript
@@ -278,15 +293,32 @@ foreign import setDefaultEncodingImpl
 -- | effect on the behaviour of the `writeString` function (because that
 -- | function ensures that the encoding is always supplied explicitly).
 setDefaultEncoding
-  :: forall r eff
-   . Writable r eff
+  :: forall r
+   . Writable r
   -> Encoding
-  -> Eff eff Unit
+  -> Effect Unit
 setDefaultEncoding r enc = setDefaultEncodingImpl r (show enc)
 
 -- | End writing data to the stream.
 foreign import end
-  :: forall r eff
-   . Writable r eff
-  -> Eff eff Unit
-  -> Eff eff Unit
+  :: forall r
+   . Writable r
+  -> Effect Unit
+  -> Effect Unit
+
+-- | Destroy the stream. It will release any internal resources.
+--
+-- Added in node 8.0.
+foreign import destroy
+  :: forall r
+   . Stream r
+  -> Effect Unit
+
+-- | Destroy the stream and emit 'error'.
+--
+-- Added in node 8.0.
+foreign import destroyWithError
+  :: forall r
+   . Stream r
+  -> Error
+  -> Effect Unit

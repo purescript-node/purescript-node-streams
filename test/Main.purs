@@ -1,44 +1,34 @@
 module Test.Main where
 
 import Prelude
-import Control.Monad.Eff (Eff, kind Effect)
-import Control.Monad.Eff.Console (CONSOLE, log)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Node.Encoding (Encoding(..))
-import Node.Stream (Duplex, Readable, Writable, onDataString, end, writeString, pipe, onDataEither, onData, setEncoding, setDefaultEncoding, read, onReadable, readString)
-import Test.Assert (ASSERT, assert, assert')
-import Node.Buffer as Buffer
+
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromJust, isNothing, isJust)
+import Effect (Effect)
+import Effect.Console (log)
+import Node.Buffer as Buffer
+import Node.Encoding (Encoding(..))
+import Node.Stream (Duplex, Readable, Writable, onDataString, end, writeString, pipe, onDataEither, onData, setEncoding, setDefaultEncoding, read, onReadable, readString)
 import Partial.Unsafe (unsafePartial)
+import Test.Assert (assert, assert')
 
-assertEqual :: forall e a. Show a => Eq a => a -> a -> Eff (assert :: ASSERT | e) Unit
+assertEqual :: forall a. Show a => Eq a => a -> a -> Effect Unit
 assertEqual x y =
   assert' (show x <> " did not equal " <> show y) (x == y)
 
-foreign import data STREAM_BUFFER :: Effect
 
-foreign import writableStreamBuffer :: forall eff. Eff (sb :: STREAM_BUFFER | eff) (Writable () (sb :: STREAM_BUFFER | eff))
+foreign import writableStreamBuffer :: Effect (Writable ())
 
-foreign import getContentsAsString :: forall r eff. Writable r (sb :: STREAM_BUFFER | eff) -> Eff (sb :: STREAM_BUFFER | eff) String
+foreign import getContentsAsString :: forall r. Writable r -> Effect String
 
-foreign import readableStreamBuffer :: forall eff. Eff (sb :: STREAM_BUFFER | eff) (Readable () (sb :: STREAM_BUFFER | eff))
+foreign import readableStreamBuffer :: Effect (Readable ())
 
-foreign import putImpl :: forall r eff. String -> String -> Readable r (sb :: STREAM_BUFFER | eff) -> Eff (sb :: STREAM_BUFFER | eff) Unit
+foreign import putImpl :: forall r. String -> String -> Readable r -> Effect Unit
 
-put :: forall r eff. String -> Encoding -> Readable r (sb :: STREAM_BUFFER | eff) -> Eff (sb :: STREAM_BUFFER | eff) Unit
+put :: forall r. String -> Encoding -> Readable r -> Effect Unit
 put str enc = putImpl str (show enc)
 
-main
-  :: forall eff
-   . Eff ( console :: CONSOLE
-         , sb :: STREAM_BUFFER
-         , assert :: ASSERT
-         , exception :: EXCEPTION
-         , buffer :: Buffer.BUFFER
-         , stream :: PASS_THROUGH
-         , gzip :: GZIP
-         | eff ) Boolean
+main :: Effect Boolean
 main = do
   log "setDefaultEncoding should not affect writing"
   _ <- testSetDefaultEncoding
@@ -55,13 +45,7 @@ main = do
 testString :: String
 testString = "üöß💡"
 
-testReads
-  :: forall eff
-   . Eff ( stream :: PASS_THROUGH
-         , exception :: EXCEPTION
-         , buffer :: Buffer.BUFFER
-         , assert :: ASSERT
-         | eff ) Boolean
+testReads :: Effect Boolean
 testReads = do
   _ <- testReadString
   testReadBuf
@@ -96,11 +80,7 @@ testReads = do
       writeString sIn UTF8 testString do
         pure unit
 
-testSetDefaultEncoding
-  :: forall eff
-   . Eff ( sb :: STREAM_BUFFER
-         , assert :: ASSERT
-         | eff ) Boolean
+testSetDefaultEncoding :: Effect Boolean
 testSetDefaultEncoding = do
   w1 <- writableStreamBuffer
   _ <- check w1
@@ -115,13 +95,7 @@ testSetDefaultEncoding = do
       c <- getContentsAsString w
       assertEqual testString c
 
-testSetEncoding
-  :: forall eff
-   . Eff ( sb :: STREAM_BUFFER
-         , exception :: EXCEPTION
-         , buffer :: Buffer.BUFFER
-         , assert :: ASSERT
-         | eff ) Unit
+testSetEncoding :: Effect Unit
 testSetEncoding = do
   check UTF8
   check UTF16LE
@@ -140,14 +114,7 @@ testSetEncoding = do
         _ <- assertEqual <$> Buffer.toString enc buf <*> pure testString
         assertEqual str testString
 
-testPipe
-  :: forall eff
-   . Eff ( stream :: PASS_THROUGH
-         , gzip :: GZIP
-         , exception :: EXCEPTION
-         , assert :: ASSERT
-         , console :: CONSOLE
-         | eff ) Boolean
+testPipe :: Effect Boolean
 testPipe = do
   sIn   <- passThrough
   sOut  <- passThrough
@@ -166,12 +133,10 @@ testPipe = do
       onDataString sOut UTF8 \str -> do
         assertEqual str testString
 
-foreign import data GZIP :: Effect
 
-foreign import createGzip :: forall eff. Eff (gzip :: GZIP | eff) (Duplex (gzip :: GZIP | eff))
-foreign import createGunzip :: forall eff. Eff (gzip :: GZIP | eff) (Duplex (gzip :: GZIP | eff))
+foreign import createGzip :: Effect Duplex
+foreign import createGunzip :: Effect Duplex
 
-foreign import data PASS_THROUGH :: Effect
 
 -- | Create a PassThrough stream, which simply writes its input to its output.
-foreign import passThrough :: forall eff. Eff (stream :: PASS_THROUGH | eff) (Duplex (stream :: PASS_THROUGH | eff))
+foreign import passThrough :: Effect Duplex
