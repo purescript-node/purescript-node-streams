@@ -6,6 +6,8 @@
 
 A wrapper for Node's [Stream API](https://nodejs.org/api/stream.html).
 
+See the `example` directory for a usage example.
+
 ## Installation
 
 ```

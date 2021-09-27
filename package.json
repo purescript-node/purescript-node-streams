@@ -3,6 +3,8 @@
   "scripts": {
     "clean": "rimraf output && rimraf .pulp-cache",
     "build": "eslint src && pulp build -- --censor-lib --strict",
+    "example:build": "eslint example && pulp build -I example -- --censor-lib --strict",
+    "example": "eslint example && pulp run -I example -m Gzip",
     "test": "pulp test -- --censor-lib --strict"
   },
   "devDependencies": {

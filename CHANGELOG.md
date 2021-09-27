@@ -11,6 +11,7 @@ New features:
 Bugfixes:
 
 Other improvements:
+- Fix `Gzip` example (#17, #36 by @matthewleon and @JordanMartinez)
 
 ## [v5.0.0](https://github.com/purescript-node/purescript-posix-types/releases/tag/v5.0.0) - 2021-02-26
 

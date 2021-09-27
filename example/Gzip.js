@@ -1,9 +1,5 @@
-/* global exports */
-/* global require */
 "use strict";
 
-// module Gzip
-
-exports.gzip = require('zlib').createGzip;
+exports.gzip = require("zlib").createGzip;
+exports.fileStream = require("fs").createReadStream("example/Gzip.txt");
 exports.stdout = process.stdout;
-exports.stdin = process.stdin;

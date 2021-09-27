@@ -1,4 +1,3 @@
-/* global Buffer */
 "use strict";
 
 exports.undefined = undefined;
