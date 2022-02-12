@@ -8,9 +8,7 @@ export function writableStreamBuffer() {
 }
 
 export function getContentsAsString(w) {
-  return function() {
-    return w.getContentsAsString('utf8');
-  };
+  return () => w.getContentsAsString('utf8');
 }
 
 export function readableStreamBuffer() {
@@ -18,12 +16,8 @@ export function readableStreamBuffer() {
 }
 
 export function putImpl(str) {
-  return function(enc) {
-    return function(r) {
-      return function() {
-        r.put(str, enc);
-      };
-    };
+  return enc => r => () => {
+    r.put(str, enc);
   };
 }
 
