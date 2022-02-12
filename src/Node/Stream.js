@@ -1,16 +1,16 @@
 "use strict";
 
-exports.undefined = undefined;
+export {undefined};
 
-exports.setEncodingImpl = function (s) {
+export function setEncodingImpl(s) {
   return function (enc) {
     return function () {
       s.setEncoding(enc);
     };
   };
-};
+}
 
-exports.readChunkImpl = function (Left) {
+export function readChunkImpl(Left) {
   return function (Right) {
     return function (chunk) {
       if (chunk instanceof Buffer) {
@@ -26,9 +26,9 @@ exports.readChunkImpl = function (Left) {
       }
     };
   };
-};
+}
 
-exports.onDataEitherImpl = function (readChunk) {
+export function onDataEitherImpl(readChunk) {
   return function (r) {
     return function (f) {
       return function () {
@@ -38,33 +38,33 @@ exports.onDataEitherImpl = function (readChunk) {
       };
     };
   };
-};
+}
 
-exports.onEnd = function (s) {
+export function onEnd(s) {
   return function (f) {
     return function () {
       s.on("end", f);
     };
   };
-};
+}
 
-exports.onFinish = function (s) {
+export function onFinish(s) {
   return function (f) {
     return function () {
       s.on("finish", f);
     };
   };
-};
+}
 
-exports.onReadable = function (s) {
+export function onReadable(s) {
   return function (f) {
     return function () {
       s.on("readable", f);
     };
   };
-};
+}
 
-exports.onError = function (s) {
+export function onError(s) {
   return function (f) {
     return function () {
       s.on("error", function (e) {
@@ -72,57 +72,57 @@ exports.onError = function (s) {
       });
     };
   };
-};
+}
 
-exports.onClose = function (s) {
+export function onClose(s) {
   return function (f) {
     return function () {
       s.on("close", f);
     };
   };
-};
+}
 
-exports.resume = function (s) {
+export function resume(s) {
   return function () {
     s.resume();
   };
-};
+}
 
-exports.pause = function (s) {
+export function pause(s) {
   return function () {
     s.pause();
   };
-};
+}
 
-exports.isPaused = function (s) {
+export function isPaused(s) {
   return function () {
     return s.isPaused();
   };
-};
+}
 
-exports.pipe = function (r) {
+export function pipe(r) {
   return function (w) {
     return function () {
       return r.pipe(w);
     };
   };
-};
+}
 
-exports.unpipe = function (r) {
+export function unpipe(r) {
   return function (w) {
     return function () {
       return r.unpipe(w);
     };
   };
-};
+}
 
-exports.unpipeAll = function (r) {
+export function unpipeAll(r) {
   return function () {
     return r.unpipe();
   };
-};
+}
 
-exports.readImpl = function (readChunk) {
+export function readImpl(readChunk) {
   return function (Nothing) {
     return function (Just) {
       return function (r) {
@@ -139,9 +139,9 @@ exports.readImpl = function (readChunk) {
       };
     };
   };
-};
+}
 
-exports.write = function (w) {
+export function write(w) {
   return function (chunk) {
     return function (done) {
       return function () {
@@ -149,9 +149,9 @@ exports.write = function (w) {
       };
     };
   };
-};
+}
 
-exports.writeStringImpl = function (w) {
+export function writeStringImpl(w) {
   return function (enc) {
     return function (s) {
       return function (done) {
@@ -161,29 +161,29 @@ exports.writeStringImpl = function (w) {
       };
     };
   };
-};
+}
 
-exports.cork = function (w) {
+export function cork(w) {
   return function () {
     return w.cork();
   };
-};
+}
 
-exports.uncork = function (w) {
+export function uncork(w) {
   return function () {
     return w.uncork();
   };
-};
+}
 
-exports.setDefaultEncodingImpl = function (w) {
+export function setDefaultEncodingImpl(w) {
   return function (enc) {
     return function () {
       w.setDefaultEncoding(enc);
     };
   };
-};
+}
 
-exports.end = function (w) {
+export function end(w) {
   return function (done) {
     return function () {
       w.end(null, null, function () {
@@ -191,18 +191,18 @@ exports.end = function (w) {
       });
     };
   };
-};
+}
 
-exports.destroy = function (strm) {
+export function destroy(strm) {
   return function () {
     strm.destroy(null);
   };
-};
+}
 
-exports.destroyWithError = function (strm) {
+export function destroyWithError(strm) {
   return function (e) {
     return function () {
       strm.destroy(e);
     };
   };
-};
+}
