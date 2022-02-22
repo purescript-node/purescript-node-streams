@@ -1,22 +1,22 @@
 "use strict";
 
-exports.writableStreamBuffer = function() {
+export function writableStreamBuffer() {
   var W = require('stream-buffers').WritableStreamBuffer;
   return new W;
-};
+}
 
-exports.getContentsAsString = function(w) {
+export function getContentsAsString(w) {
   return function() {
     return w.getContentsAsString('utf8');
   };
-};
+}
 
-exports.readableStreamBuffer = function() {
+export function readableStreamBuffer() {
   var R = require('stream-buffers').ReadableStreamBuffer;
   return new R;
-};
+}
 
-exports.putImpl = function(str) {
+export function putImpl(str) {
   return function(enc) {
     return function(r) {
       return function() {
@@ -24,12 +24,12 @@ exports.putImpl = function(str) {
       };
     };
   };
-};
+}
 
-exports.createGzip = require('zlib').createGzip;
-exports.createGunzip = require('zlib').createGunzip;
+export const createGzip = require('zlib').createGzip;
+export const createGunzip = require('zlib').createGunzip;
 
-exports.passThrough = function () {
+export function passThrough() {
     var s = require('stream');
     return new s.PassThrough();
-};
+}
