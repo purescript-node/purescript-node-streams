@@ -1,5 +1,8 @@
 "use strict";
 
-exports.gzip = require("zlib").createGzip;
-exports.fileStream = require("fs").createReadStream("example/Gzip.txt");
+import zlib from "zlib";
+import fs from "fs";
+
+exports.gzip = zlib.createGzip;
+exports.fileStream = fs.createReadStream("example/Gzip.txt");
 exports.stdout = process.stdout;
