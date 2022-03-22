@@ -1,12 +1,12 @@
-import { WritableStreamBuffer, ReadableStreamBuffer } from 'stream-buffers';
-import { PassThrough } from 'stream';
+import { WritableStreamBuffer, ReadableStreamBuffer } from "stream-buffers";
+import { PassThrough } from "stream";
 
 export function writableStreamBuffer() {
   return new WritableStreamBuffer;
 }
 
 export function getContentsAsString(w) {
-  return () => w.getContentsAsString('utf8');
+  return () => w.getContentsAsString("utf8");
 }
 
 export function readableStreamBuffer() {
@@ -19,8 +19,8 @@ export function putImpl(str) {
   };
 }
 
-export { createGzip, createGunzip } from 'zlib';
+export { createGzip, createGunzip } from "zlib";
 
 export function passThrough() {
-    return new PassThrough;
+  return new PassThrough;
 }
