@@ -1,35 +1,26 @@
-"use strict";
+import { WritableStreamBuffer, ReadableStreamBuffer } from 'stream-buffers';
+import { PassThrough } from 'stream';
 
-exports.writableStreamBuffer = function() {
-  var W = require('stream-buffers').WritableStreamBuffer;
-  return new W;
-};
+export function writableStreamBuffer() {
+  return new WritableStreamBuffer;
+}
 
-exports.getContentsAsString = function(w) {
-  return function() {
-    return w.getContentsAsString('utf8');
+export function getContentsAsString(w) {
+  return () => w.getContentsAsString('utf8');
+}
+
+export function readableStreamBuffer() {
+  return new ReadableStreamBuffer;
+}
+
+export function putImpl(str) {
+  return enc => r => () => {
+    r.put(str, enc);
   };
-};
+}
 
-exports.readableStreamBuffer = function() {
-  var R = require('stream-buffers').ReadableStreamBuffer;
-  return new R;
-};
+export { createGzip, createGunzip } from 'zlib';
 
-exports.putImpl = function(str) {
-  return function(enc) {
-    return function(r) {
-      return function() {
-        r.put(str, enc);
-      };
-    };
-  };
-};
-
-exports.createGzip = require('zlib').createGzip;
-exports.createGunzip = require('zlib').createGunzip;
-
-exports.passThrough = function () {
-    var s = require('stream');
-    return new s.PassThrough();
-};
+export function passThrough() {
+    return new PassThrough;
+}

@@ -1,208 +1,145 @@
-"use strict";
+const _undefined = undefined;
+export { _undefined as undefined };
 
-exports.undefined = undefined;
-
-exports.setEncodingImpl = function (s) {
-  return function (enc) {
-    return function () {
-      s.setEncoding(enc);
-    };
+export function setEncodingImpl(s) {
+  return enc => () => {
+    s.setEncoding(enc);
   };
-};
+}
 
-exports.readChunkImpl = function (Left) {
-  return function (Right) {
-    return function (chunk) {
-      if (chunk instanceof Buffer) {
-        return Right(chunk);
-      } else if (typeof chunk === "string") {
-        return Left(chunk);
-      } else {
-        throw new Error(
-          "Node.Stream.readChunkImpl: Unrecognised " +
-            "chunk type; expected String or Buffer, got: " +
-            chunk
-        );
-      }
-    };
+export function readChunkImpl(Left) {
+  return Right => chunk => {
+    if (chunk instanceof Buffer) {
+      return Right(chunk);
+    } else if (typeof chunk === "string") {
+      return Left(chunk);
+    } else {
+      throw new Error(
+        "Node.Stream.readChunkImpl: Unrecognised " +
+          "chunk type; expected String or Buffer, got: " +
+          chunk
+      );
+    }
   };
-};
+}
 
-exports.onDataEitherImpl = function (readChunk) {
-  return function (r) {
-    return function (f) {
-      return function () {
-        r.on("data", function (data) {
-          f(readChunk(data))();
-        });
-      };
-    };
+export function onDataEitherImpl(readChunk) {
+  return r => f => () => {
+    r.on("data", data => {
+      f(readChunk(data))();
+    });
   };
-};
+}
 
-exports.onEnd = function (s) {
-  return function (f) {
-    return function () {
-      s.on("end", f);
-    };
+export function onEnd(s) {
+  return f => () => {
+    s.on("end", f);
   };
-};
+}
 
-exports.onFinish = function (s) {
-  return function (f) {
-    return function () {
-      s.on("finish", f);
-    };
+export function onFinish(s) {
+  return f => () => {
+    s.on("finish", f);
   };
-};
+}
 
-exports.onReadable = function (s) {
-  return function (f) {
-    return function () {
-      s.on("readable", f);
-    };
+export function onReadable(s) {
+  return f => () => {
+    s.on("readable", f);
   };
-};
+}
 
-exports.onError = function (s) {
-  return function (f) {
-    return function () {
-      s.on("error", function (e) {
-        f(e)();
-      });
-    };
+export function onError(s) {
+  return f => () => {
+    s.on("error", e => {
+      f(e)();
+    });
   };
-};
+}
 
-exports.onClose = function (s) {
-  return function (f) {
-    return function () {
-      s.on("close", f);
-    };
+export function onClose(s) {
+  return f => () => {
+    s.on("close", f);
   };
-};
+}
 
-exports.resume = function (s) {
-  return function () {
+export function resume(s) {
+  return () => {
     s.resume();
   };
-};
+}
 
-exports.pause = function (s) {
-  return function () {
+export function pause(s) {
+  return () => {
     s.pause();
   };
-};
+}
 
-exports.isPaused = function (s) {
-  return function () {
-    return s.isPaused();
+export function isPaused(s) {
+  return () => s.isPaused();
+}
+
+export function pipe(r) {
+  return w => () => r.pipe(w);
+}
+
+export function unpipe(r) {
+  return w => () => r.unpipe(w);
+}
+
+export function unpipeAll(r) {
+  return () => r.unpipe();
+}
+
+export function readImpl(readChunk) {
+  return Nothing => Just => r => s => () => {
+    const v = r.read(s);
+    if (v === null) {
+      return Nothing;
+    } else {
+      return Just(readChunk(v));
+    }
   };
-};
+}
 
-exports.pipe = function (r) {
-  return function (w) {
-    return function () {
-      return r.pipe(w);
-    };
+export function write(w) {
+  return chunk => done => () => w.write(chunk, null, done);
+}
+
+export function writeStringImpl(w) {
+  return enc => s => done => () => w.write(s, enc, done);
+}
+
+export function cork(w) {
+  return () => w.cork();
+}
+
+export function uncork(w) {
+  return () => w.uncork();
+}
+
+export function setDefaultEncodingImpl(w) {
+  return enc => () => {
+    w.setDefaultEncoding(enc);
   };
-};
+}
 
-exports.unpipe = function (r) {
-  return function (w) {
-    return function () {
-      return r.unpipe(w);
-    };
+export function end(w) {
+  return done => () => {
+    w.end(null, null, () => {
+      done();
+    });
   };
-};
+}
 
-exports.unpipeAll = function (r) {
-  return function () {
-    return r.unpipe();
-  };
-};
-
-exports.readImpl = function (readChunk) {
-  return function (Nothing) {
-    return function (Just) {
-      return function (r) {
-        return function (s) {
-          return function () {
-            var v = r.read(s);
-            if (v === null) {
-              return Nothing;
-            } else {
-              return Just(readChunk(v));
-            }
-          };
-        };
-      };
-    };
-  };
-};
-
-exports.write = function (w) {
-  return function (chunk) {
-    return function (done) {
-      return function () {
-        return w.write(chunk, null, done);
-      };
-    };
-  };
-};
-
-exports.writeStringImpl = function (w) {
-  return function (enc) {
-    return function (s) {
-      return function (done) {
-        return function () {
-          return w.write(s, enc, done);
-        };
-      };
-    };
-  };
-};
-
-exports.cork = function (w) {
-  return function () {
-    return w.cork();
-  };
-};
-
-exports.uncork = function (w) {
-  return function () {
-    return w.uncork();
-  };
-};
-
-exports.setDefaultEncodingImpl = function (w) {
-  return function (enc) {
-    return function () {
-      w.setDefaultEncoding(enc);
-    };
-  };
-};
-
-exports.end = function (w) {
-  return function (done) {
-    return function () {
-      w.end(null, null, function () {
-        done();
-      });
-    };
-  };
-};
-
-exports.destroy = function (strm) {
-  return function () {
+export function destroy(strm) {
+  return () => {
     strm.destroy(null);
   };
-};
+}
 
-exports.destroyWithError = function (strm) {
-  return function (e) {
-    return function () {
-      strm.destroy(e);
-    };
+export function destroyWithError(strm) {
+  return e => () => {
+    strm.destroy(e);
   };
-};
+}
