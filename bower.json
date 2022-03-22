@@ -20,7 +20,7 @@
     "purescript-effect": "master",
     "purescript-either": "master",
     "purescript-exceptions": "master",
-    "purescript-node-buffer": "^7.0.0",
+    "purescript-node-buffer": "master",
     "purescript-prelude": "master"
   }
 }
