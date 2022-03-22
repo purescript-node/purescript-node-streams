@@ -1,5 +1,3 @@
-"use strict";
-
 import { WritableStreamBuffer, ReadableStreamBuffer } from 'stream-buffers';
 import { PassThrough } from 'stream';
 
