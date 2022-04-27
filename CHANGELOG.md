@@ -6,6 +6,7 @@ Notable changes to this project are documented in this file. The format is based
 
 Breaking changes:
 - Update project and deps to PureScript v0.15.0 (#39 by @nwolverson, @JordanMartinez, @sigma-andex)
+- Update `write` callback to include `Error` arg (#40 by @JordanMartinez)
 
 New features:
 
