@@ -254,7 +254,7 @@ foreign import write
   :: forall r
    . Writable r
   -> Buffer
-  -> Effect Unit
+  -> (Error -> Effect Unit)
   -> Effect Boolean
 
 foreign import writeStringImpl
@@ -262,7 +262,7 @@ foreign import writeStringImpl
    . Writable r
   -> String
   -> String
-  -> Effect Unit
+  -> (Error -> Effect Unit)
   -> Effect Boolean
 
 -- | Write a string in the specified encoding to a writable stream.
@@ -271,7 +271,7 @@ writeString
    . Writable r
   -> Encoding
   -> String
-  -> Effect Unit
+  -> (Error -> Effect Unit)
   -> Effect Boolean
 writeString w enc = writeStringImpl w (show enc)
 
