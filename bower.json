@@ -12,15 +12,15 @@
     "url": "https://github.com/purescript-node/purescript-node-streams.git"
   },
   "devDependencies": {
-    "purescript-assert": "master",
-    "purescript-console": "master",
-    "purescript-partial": "master"
+    "purescript-assert": "^6.0.0",
+    "purescript-console": "^6.0.0",
+    "purescript-partial": "^4.0.0"
   },
   "dependencies": {
-    "purescript-effect": "master",
-    "purescript-either": "master",
-    "purescript-exceptions": "master",
-    "purescript-node-buffer": "master",
-    "purescript-prelude": "master"
+    "purescript-effect": "^4.0.0",
+    "purescript-either": "^6.0.0",
+    "purescript-exceptions": "^6.0.0",
+    "purescript-node-buffer": "^8.0.0",
+    "purescript-prelude": "^6.0.0"
   }
 }
