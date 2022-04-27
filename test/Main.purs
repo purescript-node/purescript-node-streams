@@ -62,7 +62,7 @@ testReads = do
         assertEqual (unsafePartial (fromJust str)) testString
         pure unit
 
-      writeString sIn UTF8 testString do
+      writeString sIn UTF8 testString \_ -> do
         pure unit
 
     testReadBuf = do
@@ -77,7 +77,7 @@ testReads = do
                     <*> pure testString
         pure unit
 
-      writeString sIn UTF8 testString do
+      writeString sIn UTF8 testString \_ -> do
         pure unit
 
 testSetDefaultEncoding :: Effect Boolean
@@ -91,7 +91,7 @@ testSetDefaultEncoding = do
 
   where
   check w = do
-    writeString w UTF8 testString do
+    writeString w UTF8 testString \_ -> do
       c <- getContentsAsString w
       assertEqual testString c
 
@@ -128,7 +128,7 @@ testPipe = do
   log "pipe 3"
   _ <- unzip `pipe` sOut
 
-  writeString sIn UTF8 testString do
+  writeString sIn UTF8 testString \_ -> do
     end sIn do
       onDataString sOut UTF8 \str -> do
         assertEqual str testString
