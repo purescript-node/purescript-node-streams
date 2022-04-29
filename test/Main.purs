@@ -6,9 +6,10 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromJust, isJust, isNothing)
 import Effect (Effect)
 import Effect.Console (log)
+import Effect.Exception (error)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(..))
-import Node.Stream (Duplex, Readable, Writable, destroy, end, onData, onDataEither, onDataString, onError, onReadable, pipe, read, readString, setDefaultEncoding, setEncoding, writeString)
+import Node.Stream (Duplex, Readable, Writable, destroyWithError, end, onData, onDataEither, onDataString, onError, onReadable, pipe, read, readString, setDefaultEncoding, setEncoding, writeString)
 import Partial.Unsafe (unsafePartial)
 import Test.Assert (assert, assert')
 
@@ -174,7 +175,7 @@ testEnd = do
     w1 <- writableStreamBuffer
     _ <- onError w1 (const $ pure unit)
     void $ writeString w1 UTF8 "msg" \_ -> do
-      _ <- destroy w1
+      _ <- destroyWithError w1 $ error "Problem"
       end w1 \err -> do
         assert' "end - should have error" $ isJust err
 
