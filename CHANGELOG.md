@@ -21,6 +21,7 @@ Breaking changes:
 New features:
 
 Bugfixes:
+- Exported `destroyWithError` (#43 by @JordanMartinez)
 
 Other improvements:
 - Fix `Gzip` example (#17, #36 by @matthewleon and @JordanMartinez)
