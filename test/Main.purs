@@ -3,12 +3,12 @@ module Test.Main where
 import Prelude
 
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..), fromJust, isNothing, isJust)
+import Data.Maybe (Maybe(..), fromJust, isJust, isNothing)
 import Effect (Effect)
 import Effect.Console (log)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(..))
-import Node.Stream (Duplex, Readable, Writable, onDataString, end, writeString, pipe, onDataEither, onData, setEncoding, setDefaultEncoding, read, onReadable, readString)
+import Node.Stream (Duplex, Readable, Writable, destroy, end, onData, onDataEither, onDataString, onError, onReadable, pipe, read, readString, setDefaultEncoding, setEncoding, writeString)
 import Partial.Unsafe (unsafePartial)
 import Test.Assert (assert, assert')
 
@@ -38,6 +38,12 @@ main = do
 
   log "test pipe"
   _ <- testPipe
+
+  log "test write"
+  testWrite
+
+  log "test end"
+  testEnd
 
   log "test manual reads"
   testReads
@@ -129,7 +135,7 @@ testPipe = do
   _ <- unzip `pipe` sOut
 
   writeString sIn UTF8 testString \_ -> do
-    end sIn do
+    end sIn \_ -> do
       onDataString sOut UTF8 \str -> do
         assertEqual str testString
 
@@ -140,3 +146,42 @@ foreign import createGunzip :: Effect Duplex
 
 -- | Create a PassThrough stream, which simply writes its input to its output.
 foreign import passThrough :: Effect Duplex
+
+testWrite :: Effect Unit
+testWrite = do
+  hasError
+  noError
+  where
+  hasError = do
+    w1 <- writableStreamBuffer
+    _ <- onError w1 (const $ pure unit)
+    void $ end w1 $ const $ pure unit
+    void $ writeString w1 UTF8 "msg" \err -> do
+      assert' "writeString - should have error" $ isJust err
+
+  noError = do
+    w1 <- writableStreamBuffer
+    _ <- onError w1 (const $ pure unit)
+    void $ writeString w1 UTF8 "msg1" \err -> do
+      assert' "writeString - should have no error" $ isNothing err
+    void $ end w1 (const $ pure unit)
+
+testEnd :: Effect Unit
+testEnd = do
+  hasError
+  noError
+  where
+  hasError = do
+    w1 <- writableStreamBuffer
+    _ <- onError w1 (const $ pure unit)
+    void $ writeString w1 UTF8 "msg" \_ -> do
+      _ <- destroy w1
+      end w1 \err -> do
+        assert' "end - should have error" $ isJust err
+
+  noError = do
+    w1 <- writableStreamBuffer
+    _ <- onError w1 (const $ pure unit)
+    void $ writeString w1 UTF8 "msg" \_ -> do
+      end w1 \err -> do
+        assert' "end - should have no error" $ isNothing err
