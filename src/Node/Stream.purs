@@ -32,6 +32,7 @@ module Node.Stream
   , setDefaultEncoding
   , end
   , destroy
+  , destroyWithError
   ) where
 
 import Prelude
