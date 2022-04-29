@@ -161,7 +161,6 @@ testWrite = do
 
   noError = do
     w1 <- writableStreamBuffer
-    _ <- onError w1 (const $ pure unit)
     void $ writeString w1 UTF8 "msg1" \err -> do
       assert' "writeString - should have no error" $ isNothing err
     void $ end w1 (const $ pure unit)
@@ -181,7 +180,5 @@ testEnd = do
 
   noError = do
     w1 <- writableStreamBuffer
-    _ <- onError w1 (const $ pure unit)
-    void $ writeString w1 UTF8 "msg" \_ -> do
-      end w1 \err -> do
-        assert' "end - should have no error" $ isNothing err
+    end w1 \err -> do
+      assert' "end - should have no error" $ isNothing err
