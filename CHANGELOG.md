@@ -12,18 +12,23 @@ Bugfixes:
 
 Other improvements:
 
-## [v6.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v6.0.0) - 2022-04-27
+## [v7.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v7.0.0) - 2022-04-29
 
 Breaking changes:
 - Update project and deps to PureScript v0.15.0 (#39 by @nwolverson, @JordanMartinez, @sigma-andex)
-- Update `write` callback to include `Error` arg (#40 by @JordanMartinez)
+- Update `write`/`writeString`/`end` callbacks to include `Maybe Error` arg (#40 and #43 by @JordanMartinez)
 
 New features:
 
 Bugfixes:
+- Exported `destroyWithError` (#43 by @JordanMartinez)
 
 Other improvements:
 - Fix `Gzip` example (#17, #36 by @matthewleon and @JordanMartinez)
+
+## [v6.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v6.0.0) - 2022-04-27
+
+Due to an incorrectly-made breaking change, please use `v7.0.0` instead.
 
 ## [v5.0.0](https://github.com/purescript-node/purescript-posix-types/releases/tag/v5.0.0) - 2021-02-26
 

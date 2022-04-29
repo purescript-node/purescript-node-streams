@@ -32,15 +32,18 @@ module Node.Stream
   , setDefaultEncoding
   , end
   , destroy
+  , destroyWithError
   ) where
 
 import Prelude
 
 import Effect (Effect)
-import Effect.Exception (throw, Error())
+import Effect.Exception (throw, Error)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
-import Node.Buffer (Buffer())
+import Node.Buffer (Buffer)
+import Data.Nullable as N
+import Effect.Uncurried (EffectFn1, mkEffectFn1)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding)
 
@@ -249,20 +252,28 @@ foreign import unpipeAll
    . Readable w
   -> Effect Unit
 
--- | Write a Buffer to a writable stream.
-foreign import write
+foreign import writeImpl
   :: forall r
    . Writable r
   -> Buffer
-  -> (Error -> Effect Unit)
+  -> EffectFn1 (N.Nullable Error) Unit
   -> Effect Boolean
+
+-- | Write a Buffer to a writable stream.
+write
+  :: forall r
+   . Writable r
+  -> Buffer
+  -> (Maybe Error -> Effect Unit)
+  -> Effect Boolean
+write w b cb = writeImpl w b $ mkEffectFn1 (cb <<< N.toMaybe)
 
 foreign import writeStringImpl
   :: forall r
    . Writable r
   -> String
   -> String
-  -> (Error -> Effect Unit)
+  -> EffectFn1 (N.Nullable Error) Unit
   -> Effect Boolean
 
 -- | Write a string in the specified encoding to a writable stream.
@@ -271,9 +282,9 @@ writeString
    . Writable r
   -> Encoding
   -> String
-  -> (Error -> Effect Unit)
+  -> (Maybe Error -> Effect Unit)
   -> Effect Boolean
-writeString w enc = writeStringImpl w (show enc)
+writeString w enc s cb = writeStringImpl w (show enc) s $ mkEffectFn1 (cb <<< N.toMaybe)
 
 -- | Force buffering of writes.
 foreign import cork :: forall r. Writable r -> Effect Unit
@@ -299,12 +310,19 @@ setDefaultEncoding
   -> Effect Unit
 setDefaultEncoding r enc = setDefaultEncodingImpl r (show enc)
 
--- | End writing data to the stream.
-foreign import end
+foreign import endImpl
   :: forall r
    . Writable r
+  -> EffectFn1 (N.Nullable Error) Unit
   -> Effect Unit
+
+-- | End writing data to the stream.
+end
+  :: forall r
+   . Writable r
+  -> (Maybe Error -> Effect Unit)
   -> Effect Unit
+end w cb = endImpl w $ mkEffectFn1 (cb <<< N.toMaybe)
 
 -- | Destroy the stream. It will release any internal resources.
 --

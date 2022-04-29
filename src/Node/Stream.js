@@ -102,7 +102,7 @@ export function readImpl(readChunk) {
   };
 }
 
-export function write(w) {
+export function writeImpl(w) {
   return chunk => done => () => w.write(chunk, null, done);
 }
 
@@ -124,11 +124,9 @@ export function setDefaultEncodingImpl(w) {
   };
 }
 
-export function end(w) {
+export function endImpl(w) {
   return done => () => {
-    w.end(null, null, () => {
-      done();
-    });
+    w.end(null, null, done);
   };
 }
 
