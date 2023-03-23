@@ -1,4 +1,4 @@
-import * as stream from "node:fs";
+import * as stream from "node:stream";
 export { pipeline as pipelineImpl } from "node:stream";
 
 const _undefined = undefined;
@@ -145,6 +145,6 @@ export function destroyWithError(strm) {
   };
 }
 
-export function passThroughImpl() {
+export function passThrough() {
   return new stream.PassThrough();
 }

@@ -17,12 +17,14 @@
     "purescript-partial": "^4.0.0"
   },
   "dependencies": {
+    "purescript-arrays": "^7.2.0",
     "purescript-effect": "^4.0.0",
     "purescript-either": "^6.0.0",
     "purescript-exceptions": "^6.0.0",
+    "purescript-maybe": "^4.0.0",
     "purescript-node-buffer": "^8.0.0",
     "purescript-nullable": "^6.0.0",
-    "purescript-prelude": "^6.0.0",
+    "purescript-prelude": "^6.0.1",
     "purescript-unsafe-coerce": "^6.0.0"
   }
 }

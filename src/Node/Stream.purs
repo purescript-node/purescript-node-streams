@@ -34,20 +34,22 @@ module Node.Stream
   , destroy
   , destroyWithError
   , pipeline
+  , passThrough
   ) where
 
 import Prelude
 
+import Data.Array as Array
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Nullable (Nullable)
 import Data.Nullable as N
 import Effect (Effect)
 import Effect.Exception (throw, Error)
-import Effect.Uncurried (EffectFn1, mkEffectFn1)
+import Effect.Uncurried (EffectFn1, EffectFn2, mkEffectFn1, runEffectFn2)
 import Node.Buffer (Buffer)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding)
-import Prim.Boolean (False, True)
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | A stream.
@@ -344,16 +346,17 @@ foreign import destroyWithError
   -> Error
   -> Effect Unit
 
-foreign import pipelineImpl :: forall x. EffectFn2 (Array (forall a. Stream a)) (EffectFn2 (Nullable Error) x Unit) Unit
+foreign import pipelineImpl :: EffectFn2 (Array Duplex) (EffectFn1 (Nullable Error) Unit) Unit
 
-pipeline :: forall srcR destR. Readable srcR -> Array Duplex -> Writable destR -> (Either Error a -> Effect Unit) -> Effect Unit
-pipeline src trans dest cb = runEffectFn2 pipelineImpl (src `Array.cons` (toArrayStream trans) `Array.snoc` dest) $ mkEffectFn2 \err a ->
-  case toMaybe err of
-    Just err' -> cb $ Left err'
-    Nothing -> cb $ Right a
+pipeline :: forall srcR destR. Readable srcR -> Array Duplex -> Writable destR -> (Maybe Error -> Effect Unit) -> Effect Unit
+pipeline src trans dest cb = runEffectFn2 pipelineImpl (src `consStream` trans `snocStream` dest) $ mkEffectFn1 \err ->
+  cb $ N.toMaybe err
   where
-  toArrayStream :: Array Duplex -> Array (forall a. Stream a)
-  toArrayStream = unsafeCoerce
+  consStream :: Readable srcR -> Array Duplex -> Array Duplex
+  consStream = unsafeCoerce Array.cons
+
+  snocStream :: Array Duplex -> Writable destR -> Array Duplex
+  snocStream = unsafeCoerce Array.snoc
 
 -- | Create a PassThrough stream, which simply writes its input to its output
 foreign import passThrough :: Effect Duplex
