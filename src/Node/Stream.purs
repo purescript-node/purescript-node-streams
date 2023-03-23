@@ -48,6 +48,7 @@ import Node.Buffer (Buffer)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding)
 import Prim.Boolean (False, True)
+import Unsafe.Coerce (unsafeCoerce)
 
 -- | A stream.
 -- |
@@ -354,5 +355,5 @@ pipeline src trans dest cb = runEffectFn2 pipelineImpl (src `Array.cons` (toArra
   toArrayStream :: Array Duplex -> Array (forall a. Stream a)
   toArrayStream = unsafeCoerce
 
--- | Create a PassThrough stream, which simply writes its input to its output.
+-- | Create a PassThrough stream, which simply writes its input to its output
 foreign import passThrough :: Effect Duplex
