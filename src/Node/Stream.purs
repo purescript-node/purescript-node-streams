@@ -33,19 +33,21 @@ module Node.Stream
   , end
   , destroy
   , destroyWithError
+  , pipeline
   ) where
 
 import Prelude
 
-import Effect (Effect)
-import Effect.Exception (throw, Error)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
-import Node.Buffer (Buffer)
 import Data.Nullable as N
+import Effect (Effect)
+import Effect.Exception (throw, Error)
 import Effect.Uncurried (EffectFn1, mkEffectFn1)
+import Node.Buffer (Buffer)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding)
+import Prim.Boolean (False, True)
 
 -- | A stream.
 -- |
@@ -95,7 +97,7 @@ onData r cb =
   where
   fromEither x =
     case x of
-      Left _  ->
+      Left _ ->
         throw "Stream encoding should not be set"
       Right buf ->
         pure buf
@@ -103,13 +105,13 @@ onData r cb =
 read
   :: forall w
    . Readable w
-   -> Maybe Int
-   -> Effect (Maybe Buffer)
+  -> Maybe Int
+  -> Effect (Maybe Buffer)
 read r size = do
   v <- readEither r size
   case v of
-    Nothing        -> pure Nothing
-    Just (Left _)  -> throw "Stream encoding should not be set"
+    Nothing -> pure Nothing
+    Just (Left _) -> throw "Stream encoding should not be set"
     Just (Right b) -> pure (Just b)
 
 readString
@@ -121,9 +123,9 @@ readString
 readString r size enc = do
   v <- readEither r size
   case v of
-       Nothing          -> pure Nothing
-       Just (Left _)    -> throw "Stream encoding should not be set"
-       Just (Right buf) -> Just <$> Buffer.toString enc buf
+    Nothing -> pure Nothing
+    Just (Left _) -> throw "Stream encoding should not be set"
+    Just (Right buf) -> Just <$> Buffer.toString enc buf
 
 readEither
   :: forall w
@@ -340,3 +342,17 @@ foreign import destroyWithError
    . Stream r
   -> Error
   -> Effect Unit
+
+foreign import pipelineImpl :: forall x. EffectFn2 (Array (forall a. Stream a)) (EffectFn2 (Nullable Error) x Unit) Unit
+
+pipeline :: forall srcR destR. Readable srcR -> Array Duplex -> Writable destR -> (Either Error a -> Effect Unit) -> Effect Unit
+pipeline src trans dest cb = runEffectFn2 pipelineImpl (src `Array.cons` (toArrayStream trans) `Array.snoc` dest) $ mkEffectFn2 \err a ->
+  case toMaybe err of
+    Just err' -> cb $ Left err'
+    Nothing -> cb $ Right a
+  where
+  toArrayStream :: Array Duplex -> Array (forall a. Stream a)
+  toArrayStream = unsafeCoerce
+
+-- | Create a PassThrough stream, which simply writes its input to its output.
+foreign import passThrough :: Effect Duplex
