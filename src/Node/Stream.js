@@ -1,3 +1,5 @@
+import stream from "node:stream";
+
 const _undefined = undefined;
 export { _undefined as undefined };
 
@@ -112,3 +114,11 @@ export const destroyErrorImpl = (w, e) => w.destroy(e);
 export const closedImpl = (w) => w.closed;
 
 export const destroyedImpl = (w) => w.destroyed;
+
+export const allowHalfOpenImpl = (d) => d.allowHalfOpen;
+
+export const pipelineImpl = (src, transforms, dst, cb) => stream.pipeline([src, ...transforms, dst], cb);
+
+export const readableFromImpl = (buf) => stream.ReadableStream.from(buf);
+
+export const newPassThrough = () => new stream.PassThrough({ objectMode: false });

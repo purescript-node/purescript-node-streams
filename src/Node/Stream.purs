@@ -62,6 +62,10 @@ module Node.Stream
   , destroy'
   , closed
   , destroyed
+  , allowHalfOpen
+  , pipeline
+  , fromBuffer
+  , newPassThrough
   ) where
 
 import Prelude
@@ -451,3 +455,20 @@ destroyed :: forall r. Stream r -> Effect Boolean
 destroyed w = runEffectFn1 destroyedImpl w
 
 foreign import destroyedImpl :: forall r. EffectFn1 (Stream r) (Boolean)
+
+allowHalfOpen :: Duplex -> Effect Boolean
+allowHalfOpen d = runEffectFn1 allowHalfOpenImpl d
+
+foreign import allowHalfOpenImpl :: EffectFn1 (Duplex) (Boolean)
+
+pipeline :: forall w r. Readable w -> Array Duplex -> Writable r -> (Error -> Effect Unit) -> Effect Unit
+pipeline src transforms dest cb = runEffectFn4 pipelineImpl src transforms dest cb
+
+foreign import pipelineImpl :: forall w r. EffectFn4 (Readable w) (Array Duplex) (Writable r) ((Error -> Effect Unit)) (Unit)
+
+fromBuffer :: Buffer -> Effect (Readable ())
+fromBuffer buf = runEffectFn1 readableFromImpl buf
+
+foreign import readableFromImpl :: EffectFn1 (Buffer) (Readable ())
+
+foreign import newPassThrough :: Effect Duplex
