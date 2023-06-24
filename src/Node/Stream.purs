@@ -12,11 +12,11 @@ module Node.Stream
   , onDataString
   , onDataEither
   , setEncoding
-  , onReadable
-  , onEnd
-  , onFinish
-  , onClose
-  , onError
+  , readableH
+  , endH
+  , finishH
+  , closeH
+  , errorH
   , resume
   , pause
   , isPaused
@@ -42,12 +42,13 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable as N
 import Effect (Effect)
-import Effect.Exception (throw, Error)
+import Effect.Exception (Error, throw)
 import Effect.Uncurried (EffectFn1, mkEffectFn1)
 import Node.Buffer (Buffer)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding)
-import Node.EventEmitter (EventEmitter)
+import Node.EventEmitter (EventEmitter, EventHandle(..))
+import Node.EventEmitter.UtilTypes (EventHandle1, EventHandle0)
 import Unsafe.Coerce (unsafeCoerce)
 
 -- | A stream.
@@ -194,40 +195,20 @@ setEncoding
   -> Effect Unit
 setEncoding r enc = setEncodingImpl r (show enc)
 
--- | Listen for `readable` events.
-foreign import onReadable
-  :: forall w
-   . Readable w
-  -> Effect Unit
-  -> Effect Unit
+readableH :: forall w. EventHandle0 (Readable w)
+readableH = EventHandle "readable" identity
 
--- | Listen for `end` events.
-foreign import onEnd
-  :: forall w
-   . Readable w
-  -> Effect Unit
-  -> Effect Unit
+endH :: forall w. EventHandle0 (Readable w)
+endH = EventHandle "end" identity
 
--- | Listen for `finish` events.
-foreign import onFinish
-  :: forall w
-   . Writable w
-  -> Effect Unit
-  -> Effect Unit
+finishH :: forall w. EventHandle0 (Readable w)
+finishH = EventHandle "finish" identity
 
--- | Listen for `close` events.
-foreign import onClose
-  :: forall w
-   . Stream w
-  -> Effect Unit
-  -> Effect Unit
+closeH :: forall w. EventHandle0 (Readable w)
+closeH = EventHandle "close" identity
 
--- | Listen for `error` events.
-foreign import onError
-  :: forall w
-   . Stream w
-  -> (Error -> Effect Unit)
-  -> Effect Unit
+errorH :: forall w. EventHandle1 (Readable w) Error
+errorH = EventHandle "error" mkEffectFn1
 
 -- | Resume reading from the stream.
 foreign import resume :: forall w. Readable w -> Effect Unit

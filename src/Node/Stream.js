@@ -31,38 +31,6 @@ export function onDataEitherImpl(readChunk) {
   };
 }
 
-export function onEnd(s) {
-  return f => () => {
-    s.on("end", f);
-  };
-}
-
-export function onFinish(s) {
-  return f => () => {
-    s.on("finish", f);
-  };
-}
-
-export function onReadable(s) {
-  return f => () => {
-    s.on("readable", f);
-  };
-}
-
-export function onError(s) {
-  return f => () => {
-    s.on("error", e => {
-      f(e)();
-    });
-  };
-}
-
-export function onClose(s) {
-  return f => () => {
-    s.on("close", f);
-  };
-}
-
 export function resume(s) {
   return () => {
     s.resume();
