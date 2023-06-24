@@ -7,6 +7,7 @@ module Node.Stream
   , Write()
   , Writable()
   , Duplex()
+  , toEventEmitter
   , onData
   , onDataString
   , onDataEither
@@ -37,15 +38,17 @@ module Node.Stream
 
 import Prelude
 
-import Effect (Effect)
-import Effect.Exception (throw, Error)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
-import Node.Buffer (Buffer)
 import Data.Nullable as N
+import Effect (Effect)
+import Effect.Exception (throw, Error)
 import Effect.Uncurried (EffectFn1, mkEffectFn1)
+import Node.Buffer (Buffer)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding)
+import Node.EventEmitter (EventEmitter)
+import Unsafe.Coerce (unsafeCoerce)
 
 -- | A stream.
 -- |
@@ -69,6 +72,9 @@ type Writable r = Stream (write :: Write | r)
 
 -- | A duplex (readable _and_ writable stream)
 type Duplex = Stream (read :: Read, write :: Write)
+
+toEventEmitter :: forall rw. Stream rw -> EventEmitter
+toEventEmitter = unsafeCoerce
 
 foreign import undefined :: forall a. a
 
