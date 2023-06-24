@@ -22,36 +22,59 @@ module Node.Stream
   , readableH
   , resumeH
   , endH
+  , readable
+  , readableEnded
+  , readableFlowing
+  , readableHighWaterMark
+  , readableLength
   , resume
   , pause
   , isPaused
   , pipe
+  , pipe'
   , unpipe
   , unpipeAll
   , read
   , readString
   , readEither
+  , writeable
+  , writeableEnded
+  , writeableCorked
+  , errored
+  , writeableFinished
+  , writeableHighWaterMark
+  , writeableLength
+  , writeableNeedDrain
   , write
+  , write_
+  , writeCb
+  , writeCb_
   , writeString
+  , writeString_
+  , writeStringCb
+  , writeStringCb_
   , cork
   , uncork
   , setDefaultEncoding
   , end
+  , end_
   , destroy
-  , destroyWithError
+  , destroy'
+  , closed
+  , destroyed
   ) where
 
 import Prelude
 
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Nullable as N
+import Data.Nullable (Nullable, toMaybe)
 import Effect (Effect)
 import Effect.Exception (Error, throw)
-import Effect.Uncurried (EffectFn1, mkEffectFn1)
+import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, mkEffectFn1, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
 import Node.Buffer (Buffer)
 import Node.Buffer as Buffer
-import Node.Encoding (Encoding)
+import Node.Encoding (Encoding, encodingToNode)
 import Node.EventEmitter (EventEmitter, EventHandle(..))
 import Node.EventEmitter.UtilTypes (EventHandle1, EventHandle0)
 import Unsafe.Coerce (unsafeCoerce)
@@ -230,74 +253,155 @@ resumeH = EventHandle "resume" identity
 endH :: forall w. EventHandle0 (Readable w)
 endH = EventHandle "end" identity
 
+readable :: forall w. Readable w -> Effect Boolean
+readable r = runEffectFn1 readableImpl r
+
+foreign import readableImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
+readableEnded :: forall w. Readable w -> Effect Boolean
+readableEnded r = runEffectFn1 readableEndedImpl r
+
+foreign import readableEndedImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
+readableFlowing :: forall w. Readable w -> Effect Boolean
+readableFlowing r = runEffectFn1 readableFlowingImpl r
+
+foreign import readableFlowingImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
+readableHighWaterMark :: forall w. Readable w -> Effect Boolean
+readableHighWaterMark r = runEffectFn1 readableHighWaterMarkImpl r
+
+foreign import readableHighWaterMarkImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
+readableLength :: forall w. Readable w -> Effect Boolean
+readableLength r = runEffectFn1 readableLengthImpl r
+
+foreign import readableLengthImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
 -- | Resume reading from the stream.
-foreign import resume :: forall w. Readable w -> Effect Unit
+resume :: forall w. Readable w -> Effect Unit
+resume r = runEffectFn1 resumeImpl r
+
+foreign import resumeImpl :: forall w. EffectFn1 (Readable w) (Unit)
 
 -- | Pause reading from the stream.
-foreign import pause :: forall w. Readable w -> Effect Unit
+pause :: forall w. Readable w -> Effect Unit
+pause r = runEffectFn1 pauseImpl r
+
+foreign import pauseImpl :: forall w. EffectFn1 (Readable w) (Unit)
 
 -- | Check whether or not a stream is paused for reading.
-foreign import isPaused :: forall w. Readable w -> Effect Boolean
+isPaused :: forall w. Readable w -> Effect Boolean
+isPaused r = runEffectFn1 isPausedImpl r
+
+foreign import isPausedImpl :: forall w. EffectFn1 (Readable w) (Boolean)
 
 -- | Read chunks from a readable stream and write them to a writable stream.
-foreign import pipe
-  :: forall r w
-   . Readable w
-  -> Writable r
-  -> Effect (Writable r)
+pipe :: forall w r. Readable w -> Writable r -> Effect Unit
+pipe r w = runEffectFn2 pipeImpl r w
+
+foreign import pipeImpl :: forall w r. EffectFn2 (Readable w) (Writable r) (Unit)
+
+pipe' :: forall w r. Readable w -> Writable r -> { end :: Boolean } -> Effect Unit
+pipe' r w o = runEffectFn3 pipeCbImpl r w o
+
+foreign import pipeCbImpl :: forall w r. EffectFn3 (Readable w) (Writable r) ({ end :: Boolean }) (Unit)
 
 -- | Detach a Writable stream previously attached using `pipe`.
-foreign import unpipe
-  :: forall r w
-   . Readable w
-  -> Writable r
-  -> Effect Unit
+unpipe :: forall w r. Readable w -> Writable r -> Effect Unit
+unpipe r w = runEffectFn2 unpipeImpl r w
+
+foreign import unpipeImpl :: forall w r. EffectFn2 (Readable w) (Writable r) (Unit)
 
 -- | Detach all Writable streams previously attached using `pipe`.
-foreign import unpipeAll
-  :: forall w
-   . Readable w
-  -> Effect Unit
+unpipeAll :: forall w. Readable w -> Effect Unit
+unpipeAll r = runEffectFn1 unpipeAllImpl r
 
-foreign import writeImpl
-  :: forall r
-   . Writable r
-  -> Buffer
-  -> EffectFn1 (N.Nullable Error) Unit
-  -> Effect Boolean
+foreign import unpipeAllImpl :: forall w. EffectFn1 (Readable w) (Unit)
 
--- | Write a Buffer to a writable stream.
-write
-  :: forall r
-   . Writable r
-  -> Buffer
-  -> (Maybe Error -> Effect Unit)
-  -> Effect Boolean
-write w b cb = writeImpl w b $ mkEffectFn1 (cb <<< N.toMaybe)
+writeable :: forall r. Writable r -> Effect Boolean
+writeable w = runEffectFn1 writeableImpl w
 
-foreign import writeStringImpl
-  :: forall r
-   . Writable r
-  -> String
-  -> String
-  -> EffectFn1 (N.Nullable Error) Unit
-  -> Effect Boolean
+foreign import writeableImpl :: forall r. EffectFn1 (Writable r) (Boolean)
 
--- | Write a string in the specified encoding to a writable stream.
-writeString
-  :: forall r
-   . Writable r
-  -> Encoding
-  -> String
-  -> (Maybe Error -> Effect Unit)
-  -> Effect Boolean
-writeString w enc s cb = writeStringImpl w (show enc) s $ mkEffectFn1 (cb <<< N.toMaybe)
+writeableEnded :: forall r. Writable r -> Effect Boolean
+writeableEnded w = runEffectFn1 writeableEndedImpl w
+
+foreign import writeableEndedImpl :: forall r. EffectFn1 (Writable r) (Boolean)
+
+writeableCorked :: forall r. Writable r -> Effect Boolean
+writeableCorked w = runEffectFn1 writeableCorkedImpl w
+
+foreign import writeableCorkedImpl :: forall r. EffectFn1 (Writable r) (Boolean)
+
+errored :: forall rw. Stream rw -> Effect Boolean
+errored rw = runEffectFn1 erroredImpl rw
+
+foreign import erroredImpl :: forall rw. EffectFn1 (Stream rw) (Boolean)
+
+writeableFinished :: forall r. Writable r -> Effect Boolean
+writeableFinished w = runEffectFn1 writeableFinishedImpl w
+
+foreign import writeableFinishedImpl :: forall r. EffectFn1 (Writable r) (Boolean)
+
+writeableHighWaterMark :: forall r. Writable r -> Effect Number
+writeableHighWaterMark w = runEffectFn1 writeableHighWaterMarkImpl w
+
+foreign import writeableHighWaterMarkImpl :: forall r. EffectFn1 (Writable r) (Number)
+
+writeableLength :: forall r. Writable r -> Effect Number
+writeableLength w = runEffectFn1 writeableLengthImpl w
+
+foreign import writeableLengthImpl :: forall r. EffectFn1 (Writable r) (Number)
+
+writeableNeedDrain :: forall r. Writable r -> Effect Boolean
+writeableNeedDrain w = runEffectFn1 writeableNeedDrainImpl w
+
+foreign import writeableNeedDrainImpl :: forall r. EffectFn1 (Writable r) (Boolean)
+
+write :: forall r. Writable r -> Buffer -> Effect Boolean
+write w b = runEffectFn2 writeImpl w b
+
+write_ :: forall r. Writable r -> Buffer -> Effect Unit
+write_ w b = void $ write w b
+
+foreign import writeImpl :: forall r a. EffectFn2 (Writable r) (Buffer) (a)
+
+writeCb :: forall r. Writable r -> Buffer -> (Maybe Error -> Effect Unit) -> Effect Boolean
+writeCb w b cb = runEffectFn3 writeCbImpl w b $ mkEffectFn1 \err -> cb (toMaybe err)
+
+writeCb_ :: forall r. Writable r -> Buffer -> (Maybe Error -> Effect Unit) -> Effect Unit
+writeCb_ w b cb = void $ writeCb w b cb
+
+foreign import writeCbImpl :: forall r a. EffectFn3 (Writable r) (Buffer) (EffectFn1 (Nullable Error) Unit) (a)
+
+writeString :: forall r. Writable r -> Encoding -> String -> Effect Boolean
+writeString w enc str = runEffectFn3 writeStringImpl w str (encodingToNode enc)
+
+writeString_ :: forall r. Writable r -> Encoding -> String -> Effect Unit
+writeString_ w enc str = void $ writeString w enc str
+
+foreign import writeStringImpl :: forall r a. EffectFn3 (Writable r) (String) (String) (a)
+
+writeStringCb :: forall r. Writable r -> Encoding -> String -> (Maybe Error -> Effect Unit) -> Effect Boolean
+writeStringCb w enc str cb = runEffectFn4 writeStringCbImpl w str (encodingToNode enc) $ mkEffectFn1 \err -> cb (toMaybe err)
+
+writeStringCb_ :: forall r. Writable r -> Encoding -> String -> (Maybe Error -> Effect Unit) -> Effect Unit
+writeStringCb_ w enc str cb = void $ writeStringCb w enc str cb
+
+foreign import writeStringCbImpl :: forall r a. EffectFn4 (Writable r) (String) (String) (EffectFn1 (Nullable Error) Unit) (a)
 
 -- | Force buffering of writes.
-foreign import cork :: forall r. Writable r -> Effect Unit
+cork :: forall r. Writable r -> Effect Unit
+cork s = runEffectFn1 corkImpl s
+
+foreign import corkImpl :: forall r. EffectFn1 (Writable r) (Unit)
 
 -- | Flush buffered data.
-foreign import uncork :: forall r. Writable r -> Effect Unit
+uncork :: forall r. Writable r -> Effect Unit
+uncork w = runEffectFn1 uncorkImpl w
+
+foreign import uncorkImpl :: forall r. EffectFn1 (Writable r) (Unit)
 
 foreign import setDefaultEncodingImpl
   :: forall r
@@ -317,33 +421,33 @@ setDefaultEncoding
   -> Effect Unit
 setDefaultEncoding r enc = setDefaultEncodingImpl r (show enc)
 
-foreign import endImpl
-  :: forall r
-   . Writable r
-  -> EffectFn1 (N.Nullable Error) Unit
-  -> Effect Unit
-
 -- | End writing data to the stream.
-end
-  :: forall r
-   . Writable r
-  -> (Maybe Error -> Effect Unit)
-  -> Effect Unit
-end w cb = endImpl w $ mkEffectFn1 (cb <<< N.toMaybe)
+end :: forall r. Writable r -> (Maybe Error -> Effect Unit) -> Effect Unit
+end w cb = runEffectFn2 endCbImpl w $ mkEffectFn1 \err -> cb (toMaybe err)
 
--- | Destroy the stream. It will release any internal resources.
---
--- Added in node 8.0.
-foreign import destroy
-  :: forall r
-   . Stream r
-  -> Effect Unit
+foreign import endCbImpl :: forall r. EffectFn2 (Writable r) (EffectFn1 (Nullable Error) Unit) (Unit)
 
--- | Destroy the stream and emit 'error'.
---
--- Added in node 8.0.
-foreign import destroyWithError
-  :: forall r
-   . Stream r
-  -> Error
-  -> Effect Unit
+end_ :: forall r. Writable r -> Effect Unit
+end_ w = runEffectFn1 endImpl w
+
+foreign import endImpl :: forall r. EffectFn1 (Writable r) (Unit)
+
+destroy :: forall r. Stream r -> Effect Unit
+destroy w = runEffectFn1 destroyImpl w
+
+foreign import destroyImpl :: forall r. EffectFn1 (Stream r) (Unit)
+
+destroy' :: forall r. Stream r -> Error -> Effect Unit
+destroy' w e = runEffectFn2 destroyErrorImpl w e
+
+foreign import destroyErrorImpl :: forall r. EffectFn2 (Stream r) (Error) Unit
+
+closed :: forall r. Stream r -> Effect Boolean
+closed w = runEffectFn1 closedImpl w
+
+foreign import closedImpl :: forall r. EffectFn1 (Stream r) (Boolean)
+
+destroyed :: forall r. Stream r -> Effect Boolean
+destroyed w = runEffectFn1 destroyedImpl w
+
+foreign import destroyedImpl :: forall r. EffectFn1 (Stream r) (Boolean)

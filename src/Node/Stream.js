@@ -31,33 +31,29 @@ export function onDataEitherImpl(readChunk) {
   };
 }
 
-export function resume(s) {
-  return () => {
-    s.resume();
-  };
-}
+export const readableImpl = (r) => r.readable;
 
-export function pause(s) {
-  return () => {
-    s.pause();
-  };
-}
+export const readableEndedImpl = (r) => r.readableEnded;
 
-export function isPaused(s) {
-  return () => s.isPaused();
-}
+export const readableFlowingImpl = (r) => r.readableFlowing;
 
-export function pipe(r) {
-  return w => () => r.pipe(w);
-}
+export const readableHighWaterMarkImpl = (r) => r.readableHighWaterMark;
 
-export function unpipe(r) {
-  return w => () => r.unpipe(w);
-}
+export const readableLengthImpl = (r) => r.readableLength;
 
-export function unpipeAll(r) {
-  return () => r.unpipe();
-}
+export const resumeImpl = (r) => r.resume();
+
+export const pauseImpl = (r) => r.pause;
+
+export const isPausedImpl = (r) => r.isPaused;
+
+export const pipeImpl = (r, w) => r.pipe(w);
+
+export const pipeCbImpl = (r, w, cb) => r.pipe(w, cb);
+
+export const unpipeAllImpl = (r) => r.unpipe();
+
+export const unpipeImpl = (r, w) => r.unpipe(w);
 
 export function readImpl(readChunk) {
   return Nothing => Just => r => s => () => {
@@ -70,21 +66,17 @@ export function readImpl(readChunk) {
   };
 }
 
-export function writeImpl(w) {
-  return chunk => done => () => w.write(chunk, null, done);
-}
+export const writeImpl = (w, buf) => w.write(buf);
 
-export function writeStringImpl(w) {
-  return enc => s => done => () => w.write(s, enc, done);
-}
+export const writeCbImpl = (w, buf) => w.write(buf);
 
-export function cork(w) {
-  return () => w.cork();
-}
+export const writeStringImpl = (w, str, enc) => w.write(str, enc);
 
-export function uncork(w) {
-  return () => w.uncork();
-}
+export const writeStringCbImpl = (w, str, enc, cb) => w.write(str, enc, cb);
+
+export const corkImpl = (w) => w.cork();
+
+export const uncorkImpl = (w) => w.uncork();
 
 export function setDefaultEncodingImpl(w) {
   return enc => () => {
@@ -92,20 +84,31 @@ export function setDefaultEncodingImpl(w) {
   };
 }
 
-export function endImpl(w) {
-  return done => () => {
-    w.end(null, null, done);
-  };
-}
 
-export function destroy(strm) {
-  return () => {
-    strm.destroy(null);
-  };
-}
+export const endCbImpl = (w, cb) => w.end(cb);
 
-export function destroyWithError(strm) {
-  return e => () => {
-    strm.destroy(e);
-  };
-}
+export const endImpl = (w) => w.end();
+
+export const writeableImpl = (w) => w.writeable;
+
+export const writeableEndedImpl = (w) => w.writeableEnded;
+
+export const writeableCorkedImpl = (w) => w.writeableCorked;
+
+export const erroredImpl = (w) => w.errored;
+
+export const writeableFinishedImpl = (w) => w.writeableFinished;
+
+export const writeableHighWaterMarkImpl = (w) => w.writeableHighWaterMark;
+
+export const writeableLengthImpl = (w) => w.writeableLength;
+
+export const writeableNeedDrainImpl = (w) => w.writeableNeedDrain;
+
+export const destroyImpl = (w) => w.destroy();
+
+export const destroyErrorImpl = (w, e) => w.destroy(e);
+
+export const closedImpl = (w) => w.closed;
+
+export const destroyedImpl = (w) => w.destroyed;
