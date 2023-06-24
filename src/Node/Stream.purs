@@ -12,11 +12,16 @@ module Node.Stream
   , onDataString
   , onDataEither
   , setEncoding
-  , readableH
-  , endH
-  , finishH
   , closeH
   , errorH
+  , drainH
+  , finishH
+  , pipeH
+  , unpipeH
+  , pauseH
+  , readableH
+  , resumeH
+  , endH
   , resume
   , pause
   , isPaused
@@ -195,20 +200,35 @@ setEncoding
   -> Effect Unit
 setEncoding r enc = setEncodingImpl r (show enc)
 
+closeH :: forall rw. EventHandle0 (Stream rw)
+closeH = EventHandle "close" identity
+
+errorH :: forall rw. EventHandle1 (Stream rw) Error
+errorH = EventHandle "error" mkEffectFn1
+
+drainH :: forall r. EventHandle0 (Writable r)
+drainH = EventHandle "drain" identity
+
+finishH :: forall r. EventHandle0 (Writable r)
+finishH = EventHandle "finish" identity
+
+pipeH :: forall r w. EventHandle1 (Writable r) (Readable w)
+pipeH = EventHandle "pipe" mkEffectFn1
+
+unpipeH :: forall r w. EventHandle1 (Writable r) (Readable w)
+unpipeH = EventHandle "unpipe" mkEffectFn1
+
+pauseH :: forall w. EventHandle0 (Readable w)
+pauseH = EventHandle "pause" identity
+
 readableH :: forall w. EventHandle0 (Readable w)
 readableH = EventHandle "readable" identity
 
+resumeH :: forall w. EventHandle0 (Readable w)
+resumeH = EventHandle "resume" identity
+
 endH :: forall w. EventHandle0 (Readable w)
 endH = EventHandle "end" identity
-
-finishH :: forall w. EventHandle0 (Readable w)
-finishH = EventHandle "finish" identity
-
-closeH :: forall w. EventHandle0 (Readable w)
-closeH = EventHandle "close" identity
-
-errorH :: forall w. EventHandle1 (Readable w) Error
-errorH = EventHandle "error" mkEffectFn1
 
 -- | Resume reading from the stream.
 foreign import resume :: forall w. Readable w -> Effect Unit
