@@ -22,6 +22,7 @@
     "purescript-exceptions": "^6.0.0",
     "purescript-node-buffer": "^9.0.0",
     "purescript-nullable": "^6.0.0",
-    "purescript-prelude": "^6.0.0"
+    "purescript-prelude": "^6.0.0",
+    "purescript-node-event-emitter": "https://github.com/purescript-node/purescript-node-event-emitter.git#^3.0.0"
   }
 }
