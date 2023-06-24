@@ -1,12 +1,12 @@
 -- | This module provides a low-level wrapper for the [Node Stream API](https://nodejs.org/api/stream.html).
 
 module Node.Stream
-  ( Stream()
-  , Read()
-  , Readable()
-  , Write()
-  , Writable()
-  , Duplex()
+  ( Stream
+  , Read
+  , Readable
+  , Write
+  , Writable
+  , Duplex
   , toEventEmitter
   , onData
   , onDataString
