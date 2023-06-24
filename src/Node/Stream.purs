@@ -8,9 +8,6 @@ module Node.Stream
   , Writable
   , Duplex
   , toEventEmitter
-  , onData
-  , onDataString
-  , onDataEither
   , setEncoding
   , closeH
   , errorH
@@ -18,6 +15,10 @@ module Node.Stream
   , finishH
   , pipeH
   , unpipeH
+  , Chunk
+  , dataH
+  , dataHStr
+  , dataHEither
   , pauseH
   , readableH
   , resumeH
@@ -29,8 +30,9 @@ module Node.Stream
   , unpipe
   , unpipeAll
   , read
+  , read'
   , readString
-  , readEither
+  , readString'
   , write
   , writeString
   , cork
@@ -44,11 +46,12 @@ module Node.Stream
 import Prelude
 
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
+import Data.Nullable (Nullable, toMaybe)
 import Data.Nullable as N
 import Effect (Effect)
 import Effect.Exception (Error, throw)
-import Effect.Uncurried (EffectFn1, mkEffectFn1)
+import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, mkEffectFn1, runEffectFn1, runEffectFn2, runEffectFn3)
 import Node.Buffer (Buffer)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding)
@@ -82,104 +85,119 @@ type Duplex = Stream (read :: Read, write :: Write)
 toEventEmitter :: forall rw. Stream rw -> EventEmitter
 toEventEmitter = unsafeCoerce
 
-foreign import undefined :: forall a. a
-
+-- | Internal type. This should not be used by end-users.
 foreign import data Chunk :: Type
 
 foreign import readChunkImpl
-  :: (forall l r. l -> Either l r)
-  -> (forall l r. r -> Either l r)
-  -> Chunk
-  -> Either String Buffer
-
-readChunk :: Chunk -> Either String Buffer
-readChunk = readChunkImpl Left Right
+  :: forall r
+   . EffectFn3
+       (EffectFn1 Buffer r)
+       (EffectFn1 String r)
+       Chunk
+       r
 
 -- | Listen for `data` events, returning data in a Buffer. Note that this will fail
 -- | if `setEncoding` has been called on the stream.
-onData
-  :: forall w
-   . Readable w
-  -> (Buffer -> Effect Unit)
-  -> Effect Unit
-onData r cb =
-  onDataEither r (cb <=< fromEither)
-  where
-  fromEither x =
-    case x of
-      Left _ ->
-        throw "Stream encoding should not be set"
-      Right buf ->
-        pure buf
+-- |
+-- | This is likely the handler you want to use for converting a `Stream` into a `String`:
+-- | ```
+-- | let useStringCb = ...
+-- | ref <- Ref.new
+-- | stream # on dataH \buf ->
+-- |   Ref.modify_ (\ref' -> Array.snoc ref' buf) ref
+-- | stream # on endH do
+-- |   bufs <- Ref.read ref
+-- |   useStringCb $ Buffer.toString UTF8 $ Buffer.concat bufs
+-- | ```
+dataH :: forall w. EventHandle (Readable w) (Buffer -> Effect Unit) (EffectFn1 Chunk Unit)
+dataH = EventHandle "data" \cb ->
+  mkEffectFn1 \chunk -> do
+    runEffectFn3
+      readChunkImpl
+      (mkEffectFn1 cb)
+      (mkEffectFn1 \_ -> throw "Got a String, not a Buffer. Stream encoding should not be set")
+      chunk
 
-read
-  :: forall w
-   . Readable w
-  -> Maybe Int
-  -> Effect (Maybe Buffer)
-read r size = do
-  v <- readEither r size
-  case v of
-    Nothing -> pure Nothing
-    Just (Left _) -> throw "Stream encoding should not be set"
-    Just (Right b) -> pure (Just b)
+-- | Listen for `data` events, returning data as a String. Note that this will fail
+-- | if `setEncoding` has NOT been called on the stream.
+dataHStr :: forall w. EventHandle (Readable w) (String -> Effect Unit) (EffectFn1 Chunk Unit)
+dataHStr = EventHandle "data" \cb ->
+  mkEffectFn1 \chunk -> do
+    runEffectFn3
+      readChunkImpl
+      (mkEffectFn1 \_ -> throw "Got a Buffer, not String. Stream encoding must be set to get a String.")
+      (mkEffectFn1 cb)
+      chunk
 
+-- | Listen for `data` events, returning data in a Buffer or String. This will work
+-- | regardless of whether `setEncoding` has been called or not.
+dataHEither :: forall w. EventHandle (Readable w) (Either Buffer String -> Effect Unit) (EffectFn1 Chunk Unit)
+dataHEither = EventHandle "data" \cb ->
+  mkEffectFn1 \chunk -> do
+    runEffectFn3
+      readChunkImpl
+      (mkEffectFn1 (cb <<< Left))
+      (mkEffectFn1 (cb <<< Right))
+      chunk
+
+-- | Note: this will fail if `setEncoding` has been called on the stream.
+read :: forall w. Readable w -> Effect (Maybe Buffer)
+read r = do
+  chunk <- runEffectFn1 readImpl r
+  case toMaybe chunk of
+    Nothing ->
+      pure Nothing
+    Just c ->
+      runEffectFn3 readChunkImpl
+        (mkEffectFn1 \buf -> pure $ Just buf)
+        (mkEffectFn1 \_ -> throw "Stream encoding should not be set")
+        c
+
+foreign import readImpl :: forall w. EffectFn1 (Readable w) (Nullable Chunk)
+
+-- | Note: this will fail if `setEncoding` has been called on the stream.
+read' :: forall w. Readable w -> Int -> Effect (Maybe Buffer)
+read' r size = do
+  chunk <- runEffectFn2 readSizeImpl r size
+  case toMaybe chunk of
+    Nothing ->
+      pure Nothing
+    Just c ->
+      runEffectFn3 readChunkImpl
+        (mkEffectFn1 \buf -> pure $ Just buf)
+        (mkEffectFn1 \_ -> throw "Stream encoding should not be set")
+        c
+
+foreign import readSizeImpl :: forall w. EffectFn2 (Readable w) (Int) (Nullable Chunk)
+
+-- | Note: this will fail if `setEncoding` has been called on the stream.
 readString
   :: forall w
    . Readable w
-  -> Maybe Int
   -> Encoding
   -> Effect (Maybe String)
-readString r size enc = do
-  v <- readEither r size
-  case v of
-    Nothing -> pure Nothing
-    Just (Left _) -> throw "Stream encoding should not be set"
-    Just (Right buf) -> Just <$> Buffer.toString enc buf
+readString r enc = do
+  mbBuf <- read r
+  case mbBuf of
+    Nothing ->
+      pure Nothing
+    Just buf -> do
+      Just <$> Buffer.toString enc buf
 
-readEither
+-- | Note: this will fail if `setEncoding` has been called on the stream.
+readString'
   :: forall w
    . Readable w
-  -> Maybe Int
-  -> Effect (Maybe (Either String Buffer))
-readEither r size = readImpl readChunk Nothing Just r (fromMaybe undefined size)
-
-foreign import readImpl
-  :: forall r
-   . (Chunk -> Either String Buffer)
-  -> (forall a. Maybe a)
-  -> (forall a. a -> Maybe a)
-  -> Readable r
   -> Int
-  -> Effect (Maybe (Either String Buffer))
-
--- | Listen for `data` events, returning data in a String, which will be
--- | decoded using the given encoding. Note that this will fail if `setEncoding`
--- | has been called on the stream.
-onDataString
-  :: forall w
-   . Readable w
   -> Encoding
-  -> (String -> Effect Unit)
-  -> Effect Unit
-onDataString r enc cb = onData r (cb <=< Buffer.toString enc)
-
--- | Listen for `data` events, returning data in an `Either String Buffer`. This
--- | function is provided for the (hopefully rare) case that `setEncoding` has
--- | been called on the stream.
-onDataEither
-  :: forall r
-   . Readable r
-  -> (Either String Buffer -> Effect Unit)
-  -> Effect Unit
-onDataEither r cb = onDataEitherImpl readChunk r cb
-
-foreign import onDataEitherImpl
-  :: forall r
-   . (Chunk -> Either String Buffer)
-  -> Readable r
-  -> (Either String Buffer -> Effect Unit)
-  -> Effect Unit
+  -> Effect (Maybe String)
+readString' r size enc = do
+  mbBuf <- read' r size
+  case mbBuf of
+    Nothing ->
+      pure Nothing
+    Just buf -> do
+      Just <$> Buffer.toString enc buf
 
 foreign import setEncodingImpl
   :: forall w

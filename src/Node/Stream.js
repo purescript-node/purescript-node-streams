@@ -1,35 +1,22 @@
-const _undefined = undefined;
-export { _undefined as undefined };
-
 export function setEncodingImpl(s) {
   return enc => () => {
     s.setEncoding(enc);
   };
 }
 
-export function readChunkImpl(Left) {
-  return Right => chunk => {
-    if (chunk instanceof Buffer) {
-      return Right(chunk);
-    } else if (typeof chunk === "string") {
-      return Left(chunk);
-    } else {
-      throw new Error(
-        "Node.Stream.readChunkImpl: Unrecognised " +
-          "chunk type; expected String or Buffer, got: " +
-          chunk
-      );
-    }
-  };
-}
-
-export function onDataEitherImpl(readChunk) {
-  return r => f => () => {
-    r.on("data", data => {
-      f(readChunk(data))();
-    });
-  };
-}
+export const readChunkImpl = (useBuffer, useString, chunk) => {
+  if (chunk instanceof Buffer) {
+    return useBuffer(chunk);
+  } else if (typeof chunk === "string") {
+    return useString(chunk);
+  } else {
+    throw new Error(
+      "Node.Stream.readChunkImpl: Unrecognised " +
+        "chunk type; expected String or Buffer, got: " +
+        chunk
+    );
+  }
+};
 
 export function resume(s) {
   return () => {
@@ -59,16 +46,9 @@ export function unpipeAll(r) {
   return () => r.unpipe();
 }
 
-export function readImpl(readChunk) {
-  return Nothing => Just => r => s => () => {
-    const v = r.read(s);
-    if (v === null) {
-      return Nothing;
-    } else {
-      return Just(readChunk(v));
-    }
-  };
-}
+export const readImpl = (r) => r.read();
+
+export const readSizeImpl = (r, size) => r.read(size);
 
 export function writeImpl(w) {
   return chunk => done => () => w.write(chunk, null, done);
