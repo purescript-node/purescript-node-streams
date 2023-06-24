@@ -208,12 +208,6 @@ foreign import onDataEitherImpl
   -> (Either String Buffer -> Effect Unit)
   -> Effect Unit
 
-foreign import setEncodingImpl
-  :: forall w
-   . Readable w
-  -> String
-  -> Effect Unit
-
 -- | Set the encoding used to read chunks as strings from the stream. This
 -- | function may be useful when you are passing a readable stream to some other
 -- | JavaScript library, which already expects an encoding to be set.
@@ -225,7 +219,9 @@ setEncoding
    . Readable w
   -> Encoding
   -> Effect Unit
-setEncoding r enc = setEncodingImpl r (show enc)
+setEncoding r enc = runEffectFn2 setEncodingImpl r (show enc)
+
+foreign import setEncodingImpl :: forall w. EffectFn2 (Readable w) String Unit
 
 closeH :: forall rw. EventHandle0 (Stream rw)
 closeH = EventHandle "close" identity
@@ -407,12 +403,6 @@ uncork w = runEffectFn1 uncorkImpl w
 
 foreign import uncorkImpl :: forall r. EffectFn1 (Writable r) (Unit)
 
-foreign import setDefaultEncodingImpl
-  :: forall r
-   . Writable r
-  -> String
-  -> Effect Unit
-
 -- | Set the default encoding used to write strings to the stream. This function
 -- | is useful when you are passing a writable stream to some other JavaScript
 -- | library, which already expects a default encoding to be set. It has no
@@ -423,7 +413,9 @@ setDefaultEncoding
    . Writable r
   -> Encoding
   -> Effect Unit
-setDefaultEncoding r enc = setDefaultEncodingImpl r (show enc)
+setDefaultEncoding r enc = runEffectFn2 setDefaultEncodingImpl r (show enc)
+
+foreign import setDefaultEncodingImpl :: forall r. EffectFn2 (Writable r) String Unit
 
 -- | End writing data to the stream.
 end :: forall r. Writable r -> (Maybe Error -> Effect Unit) -> Effect Unit

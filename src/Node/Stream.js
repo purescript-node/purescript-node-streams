@@ -3,11 +3,7 @@ import stream from "node:stream";
 const _undefined = undefined;
 export { _undefined as undefined };
 
-export function setEncodingImpl(s) {
-  return enc => () => {
-    s.setEncoding(enc);
-  };
-}
+export const setEncodingImpl = (s, enc) => s.setEncoding(enc);
 
 export function readChunkImpl(Left) {
   return Right => chunk => {
@@ -80,12 +76,7 @@ export const corkImpl = (w) => w.cork();
 
 export const uncorkImpl = (w) => w.uncork();
 
-export function setDefaultEncodingImpl(w) {
-  return enc => () => {
-    w.setDefaultEncoding(enc);
-  };
-}
-
+export const setDefaultEncodingImpl = (w, enc) => w.setDefaultEncoding(enc);
 
 export const endCbImpl = (w, cb) => w.end(cb);
 
