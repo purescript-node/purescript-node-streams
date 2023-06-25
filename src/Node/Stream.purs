@@ -66,6 +66,7 @@ module Node.Stream
   , destroyed
   , allowHalfOpen
   , pipeline
+  , fromString
   , fromBuffer
   , newPassThrough
   ) where
@@ -472,9 +473,14 @@ pipeline src transforms dest cb = runEffectFn4 pipelineImpl src transforms dest 
 
 foreign import pipelineImpl :: forall w r. EffectFn4 (Readable w) (Array Duplex) (Writable r) ((Error -> Effect Unit)) (Unit)
 
-fromBuffer :: Buffer -> Effect (Readable ())
-fromBuffer buf = runEffectFn1 readableFromImpl buf
+fromString :: String -> Effect (Readable ())
+fromString str = runEffectFn1 readableFromStrImpl str
 
-foreign import readableFromImpl :: EffectFn1 (Buffer) (Readable ())
+foreign import readableFromStrImpl :: EffectFn1 (String) (Readable ())
+
+fromBuffer :: Buffer -> Effect (Readable ())
+fromBuffer buf = runEffectFn1 readableFromBufImpl buf
+
+foreign import readableFromBufImpl :: EffectFn1 (Buffer) (Readable ())
 
 foreign import newPassThrough :: Effect Duplex

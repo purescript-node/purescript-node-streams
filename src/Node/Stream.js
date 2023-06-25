@@ -90,6 +90,8 @@ export const allowHalfOpenImpl = (d) => d.allowHalfOpen;
 
 export const pipelineImpl = (src, transforms, dst, cb) => stream.pipeline([src, ...transforms, dst], cb);
 
-export const readableFromImpl = (buf) => stream.ReadableStream.from(buf);
+export const readableFromStrImpl = (str) => stream.Readable.from(str, { objectMode: false });
+
+export const readableFromBufImpl = (buf) => stream.Readable.from(buf, { objectMode: false });
 
 export const newPassThrough = () => new stream.PassThrough({ objectMode: false });
