@@ -1,14 +1,13 @@
 -- | This module provides a low-level wrapper for the [Node Stream API](https://nodejs.org/api/stream.html).
 
 module Node.Stream
-  ( Stream
-  , Read
-  , Readable
+  ( Read
   , Write
+  , Stream
+  , Readable
   , Writable
   , Duplex
   , toEventEmitter
-  , setEncoding
   , closeH
   , errorH
   , drainH
@@ -49,17 +48,18 @@ module Node.Stream
   , writeableNeedDrain
   , write
   , write_
-  , writeCb
-  , writeCb_
+  , write'
+  , write'_
   , writeString
   , writeString_
-  , writeStringCb
-  , writeStringCb_
+  , writeString'
+  , writeString'_
   , cork
   , uncork
+  , setEncoding
   , setDefaultEncoding
   , end
-  , end_
+  , end'
   , destroy
   , destroy'
   , closed
@@ -122,8 +122,8 @@ foreign import readChunkImpl
        Chunk
        r
 
--- | Listen for `data` events, returning data in a Buffer. Note that this will fail
--- | if `setEncoding` has been called on the stream.
+-- | Listen for `data` events on a stream where `setEncoding` has NOT been called, returning data as a Buffer.
+-- | If `setEncoding` HAS been called on the stream, this will throw an error.
 -- |
 -- | This is likely the handler you want to use for converting a `Stream` into a `String`:
 -- | ```
@@ -144,8 +144,8 @@ dataH = EventHandle "data" \cb ->
       (mkEffectFn1 \_ -> throw "Got a String, not a Buffer. Stream encoding should not be set")
       chunk
 
--- | Listen for `data` events, returning data as a String. Note that this will fail
--- | if `setEncoding` has NOT been called on the stream.
+-- | Listen for `data` events on a stream where `setEncoding` has been called, returning data as a String. 
+-- | If `setEncoding` has NOT been called on the stream, this will throw an error.
 dataHStr :: forall w. EventHandle (Readable w) (String -> Effect Unit) (EffectFn1 Chunk Unit)
 dataHStr = EventHandle "data" \cb ->
   mkEffectFn1 \chunk -> do
@@ -157,13 +157,13 @@ dataHStr = EventHandle "data" \cb ->
 
 -- | Listen for `data` events, returning data in a Buffer or String. This will work
 -- | regardless of whether `setEncoding` has been called or not.
-dataHEither :: forall w. EventHandle (Readable w) (Either Buffer String -> Effect Unit) (EffectFn1 Chunk Unit)
+dataHEither :: forall w. EventHandle (Readable w) (Either String Buffer -> Effect Unit) (EffectFn1 Chunk Unit)
 dataHEither = EventHandle "data" \cb ->
   mkEffectFn1 \chunk -> do
     runEffectFn3
       readChunkImpl
-      (mkEffectFn1 (cb <<< Left))
       (mkEffectFn1 (cb <<< Right))
+      (mkEffectFn1 (cb <<< Left))
       chunk
 
 -- | Note: this will fail if `setEncoding` has been called on the stream.
@@ -384,11 +384,11 @@ write_ w b = void $ write w b
 
 foreign import writeImpl :: forall r a. EffectFn2 (Writable r) (Buffer) (a)
 
-writeCb :: forall r. Writable r -> Buffer -> (Maybe Error -> Effect Unit) -> Effect Boolean
-writeCb w b cb = runEffectFn3 writeCbImpl w b $ mkEffectFn1 \err -> cb (toMaybe err)
+write' :: forall r. Writable r -> Buffer -> (Maybe Error -> Effect Unit) -> Effect Boolean
+write' w b cb = runEffectFn3 writeCbImpl w b $ mkEffectFn1 \err -> cb (toMaybe err)
 
-writeCb_ :: forall r. Writable r -> Buffer -> (Maybe Error -> Effect Unit) -> Effect Unit
-writeCb_ w b cb = void $ writeCb w b cb
+write'_ :: forall r. Writable r -> Buffer -> (Maybe Error -> Effect Unit) -> Effect Unit
+write'_ w b cb = void $ write' w b cb
 
 foreign import writeCbImpl :: forall r a. EffectFn3 (Writable r) (Buffer) (EffectFn1 (Nullable Error) Unit) (a)
 
@@ -400,11 +400,11 @@ writeString_ w enc str = void $ writeString w enc str
 
 foreign import writeStringImpl :: forall r a. EffectFn3 (Writable r) (String) (String) (a)
 
-writeStringCb :: forall r. Writable r -> Encoding -> String -> (Maybe Error -> Effect Unit) -> Effect Boolean
-writeStringCb w enc str cb = runEffectFn4 writeStringCbImpl w str (encodingToNode enc) $ mkEffectFn1 \err -> cb (toMaybe err)
+writeString' :: forall r. Writable r -> Encoding -> String -> (Maybe Error -> Effect Unit) -> Effect Boolean
+writeString' w enc str cb = runEffectFn4 writeStringCbImpl w str (encodingToNode enc) $ mkEffectFn1 \err -> cb (toMaybe err)
 
-writeStringCb_ :: forall r. Writable r -> Encoding -> String -> (Maybe Error -> Effect Unit) -> Effect Unit
-writeStringCb_ w enc str cb = void $ writeStringCb w enc str cb
+writeString'_ :: forall r. Writable r -> Encoding -> String -> (Maybe Error -> Effect Unit) -> Effect Unit
+writeString'_ w enc str cb = void $ writeString' w enc str cb
 
 foreign import writeStringCbImpl :: forall r a. EffectFn4 (Writable r) (String) (String) (EffectFn1 (Nullable Error) Unit) (a)
 
@@ -435,15 +435,15 @@ setDefaultEncoding r enc = runEffectFn2 setDefaultEncodingImpl r (show enc)
 foreign import setDefaultEncodingImpl :: forall r. EffectFn2 (Writable r) String Unit
 
 -- | End writing data to the stream.
-end :: forall r. Writable r -> (Maybe Error -> Effect Unit) -> Effect Unit
-end w cb = runEffectFn2 endCbImpl w $ mkEffectFn1 \err -> cb (toMaybe err)
-
-foreign import endCbImpl :: forall r. EffectFn2 (Writable r) (EffectFn1 (Nullable Error) Unit) (Unit)
-
-end_ :: forall r. Writable r -> Effect Unit
-end_ w = runEffectFn1 endImpl w
+end :: forall r. Writable r -> Effect Unit
+end w = runEffectFn1 endImpl w
 
 foreign import endImpl :: forall r. EffectFn1 (Writable r) (Unit)
+
+end' :: forall r. Writable r -> (Maybe Error -> Effect Unit) -> Effect Unit
+end' w cb = runEffectFn2 endCbImpl w $ mkEffectFn1 \err -> cb (toMaybe err)
+
+foreign import endCbImpl :: forall r. EffectFn2 (Writable r) (EffectFn1 (Nullable Error) Unit) (Unit)
 
 destroy :: forall r. Stream r -> Effect Unit
 destroy w = runEffectFn1 destroyImpl w
