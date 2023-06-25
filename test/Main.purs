@@ -2,14 +2,14 @@ module Test.Main where
 
 import Prelude
 
-import Data.Either (Either(..))
-import Data.Maybe (Maybe(..), fromJust, isJust, isNothing)
+import Data.Maybe (fromJust, isJust, isNothing)
 import Effect (Effect)
 import Effect.Console (log)
 import Effect.Exception (error)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(..))
-import Node.Stream (Duplex, Readable, Writable, destroyWithError, end, onData, onDataEither, onDataString, onError, onReadable, pipe, read, readString, setDefaultEncoding, setEncoding, writeString)
+import Node.EventEmitter (on_)
+import Node.Stream (Duplex, dataH, dataHStr, destroy', end, end', errorH, newPassThrough, pipe, read, readString, readableH, setDefaultEncoding, setEncoding, writeString'_, writeString_)
 import Partial.Unsafe (unsafePartial)
 import Test.Assert (assert, assert')
 
@@ -17,28 +17,16 @@ assertEqual :: forall a. Show a => Eq a => a -> a -> Effect Unit
 assertEqual x y =
   assert' (show x <> " did not equal " <> show y) (x == y)
 
-
-foreign import writableStreamBuffer :: Effect (Writable ())
-
-foreign import getContentsAsString :: forall r. Writable r -> Effect String
-
-foreign import readableStreamBuffer :: Effect (Readable ())
-
-foreign import putImpl :: forall r. String -> String -> Readable r -> Effect Unit
-
-put :: forall r. String -> Encoding -> Readable r -> Effect Unit
-put str enc = putImpl str (show enc)
-
-main :: Effect Boolean
+main :: Effect Unit
 main = do
   log "setDefaultEncoding should not affect writing"
-  _ <- testSetDefaultEncoding
+  testSetDefaultEncoding
 
   log "setEncoding should not affect reading"
   testSetEncoding
 
   log "test pipe"
-  _ <- testPipe
+  testPipe
 
   log "test write"
   testWrite
@@ -52,55 +40,54 @@ main = do
 testString :: String
 testString = "üöß💡"
 
-testReads :: Effect Boolean
+testReads :: Effect Unit
 testReads = do
-  _ <- testReadString
+  testReadString
   testReadBuf
 
   where
-    testReadString = do
-      sIn <- passThrough
-      v   <- readString sIn Nothing UTF8
-      assert (isNothing v)
+  testReadString = do
+    sIn <- newPassThrough
+    v <- readString sIn UTF8
+    assert (isNothing v)
 
-      onReadable sIn do
-        str <- readString sIn Nothing UTF8
-        assert (isJust str)
-        assertEqual (unsafePartial (fromJust str)) testString
-        pure unit
+    sIn # on_ readableH do
+      str <- readString sIn UTF8
+      assert (isJust str)
+      assertEqual (unsafePartial (fromJust str)) testString
+      pure unit
 
-      writeString sIn UTF8 testString \_ -> do
-        pure unit
+    writeString_ sIn UTF8 testString
 
-    testReadBuf = do
-      sIn <- passThrough
-      v   <- read sIn Nothing
-      assert (isNothing v)
+  testReadBuf = do
+    sIn <- newPassThrough
+    v <- read sIn
+    assert (isNothing v)
 
-      onReadable sIn do
-        buf <- read sIn Nothing
-        assert (isJust buf)
-        _ <- assertEqual <$> (Buffer.toString UTF8 (unsafePartial (fromJust buf)))
-                    <*> pure testString
-        pure unit
+    sIn # on_ readableH do
+      buf <- read sIn
+      assert (isJust buf)
+      _ <- assertEqual <$> (Buffer.toString UTF8 (unsafePartial (fromJust buf)))
+        <*> pure testString
+      pure unit
 
-      writeString sIn UTF8 testString \_ -> do
-        pure unit
+    writeString_ sIn UTF8 testString
 
-testSetDefaultEncoding :: Effect Boolean
+testSetDefaultEncoding :: Effect Unit
 testSetDefaultEncoding = do
-  w1 <- writableStreamBuffer
-  _ <- check w1
+  w1 <- newPassThrough
+  check w1
 
-  w2 <- writableStreamBuffer
+  w2 <- newPassThrough
   setDefaultEncoding w2 UCS2
   check w2
 
   where
   check w = do
-    writeString w UTF8 testString \_ -> do
-      c <- getContentsAsString w
-      assertEqual testString c
+    w # on_ dataH \buf -> do
+      str <- Buffer.toString UTF8 buf
+      assertEqual testString str
+    writeString_ w UTF8 testString
 
 testSetEncoding :: Effect Unit
 testSetEncoding = do
@@ -109,23 +96,23 @@ testSetEncoding = do
   check UCS2
   where
   check enc = do
-    r1 <- readableStreamBuffer
-    put testString enc r1
+    r1 <- newPassThrough
+    writeString_ r1 enc testString
 
-    r2 <- readableStreamBuffer
-    put testString enc r2
+    r2 <- newPassThrough
+    writeString_ r1 enc testString
     setEncoding r2 enc
 
-    onData r1 \buf -> unsafePartial do
-      onDataEither r2 \(Left str) -> do
-        _ <- assertEqual <$> Buffer.toString enc buf <*> pure testString
+    r1 # on_ dataH \buf -> do
+      r2 # on_ dataHStr \str -> do
+        join $ assertEqual <$> Buffer.toString enc buf <*> pure testString
         assertEqual str testString
 
-testPipe :: Effect Boolean
+testPipe :: Effect Unit
 testPipe = do
-  sIn   <- passThrough
-  sOut  <- passThrough
-  zip   <- createGzip
+  sIn <- newPassThrough
+  sOut <- newPassThrough
+  zip <- createGzip
   unzip <- createGunzip
 
   log "pipe 1"
@@ -135,18 +122,14 @@ testPipe = do
   log "pipe 3"
   _ <- unzip `pipe` sOut
 
-  writeString sIn UTF8 testString \_ -> do
-    end sIn \_ -> do
-      onDataString sOut UTF8 \str -> do
+  writeString'_ sIn UTF8 testString \_ -> do
+    end' sIn \_ -> do
+      sOut # on_ dataH \buf -> do
+        str <- Buffer.toString UTF8 buf
         assertEqual str testString
-
 
 foreign import createGzip :: Effect Duplex
 foreign import createGunzip :: Effect Duplex
-
-
--- | Create a PassThrough stream, which simply writes its input to its output.
-foreign import passThrough :: Effect Duplex
 
 testWrite :: Effect Unit
 testWrite = do
@@ -154,17 +137,17 @@ testWrite = do
   noError
   where
   hasError = do
-    w1 <- writableStreamBuffer
-    _ <- onError w1 (const $ pure unit)
-    void $ end w1 $ const $ pure unit
-    void $ writeString w1 UTF8 "msg" \err -> do
+    w1 <- newPassThrough
+    w1 # on_ errorH (const $ pure unit)
+    end w1
+    writeString'_ w1 UTF8 "msg" \err -> do
       assert' "writeString - should have error" $ isJust err
 
   noError = do
-    w1 <- writableStreamBuffer
-    void $ writeString w1 UTF8 "msg1" \err -> do
+    w1 <- newPassThrough
+    writeString'_ w1 UTF8 "msg1" \err -> do
       assert' "writeString - should have no error" $ isNothing err
-    void $ end w1 (const $ pure unit)
+    end w1
 
 testEnd :: Effect Unit
 testEnd = do
@@ -172,14 +155,14 @@ testEnd = do
   noError
   where
   hasError = do
-    w1 <- writableStreamBuffer
-    _ <- onError w1 (const $ pure unit)
-    void $ writeString w1 UTF8 "msg" \_ -> do
-      _ <- destroyWithError w1 $ error "Problem"
-      end w1 \err -> do
+    w1 <- newPassThrough
+    w1 # on_ errorH (const $ pure unit)
+    writeString'_ w1 UTF8 "msg" \_ -> do
+      _ <- destroy' w1 $ error "Problem"
+      end' w1 \err -> do
         assert' "end - should have error" $ isJust err
 
   noError = do
-    w1 <- writableStreamBuffer
-    end w1 \err -> do
+    w1 <- newPassThrough
+    end' w1 \err -> do
       assert' "end - should have no error" $ isNothing err
