@@ -38,4 +38,3 @@ jobs:
       - name: Check formatting
         run: |
           purs-tidy check src test
-  
