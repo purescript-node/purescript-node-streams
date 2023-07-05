@@ -95,7 +95,7 @@ onData r cb =
   where
   fromEither x =
     case x of
-      Left _  ->
+      Left _ ->
         throw "Stream encoding should not be set"
       Right buf ->
         pure buf
@@ -103,13 +103,13 @@ onData r cb =
 read
   :: forall w
    . Readable w
-   -> Maybe Int
-   -> Effect (Maybe Buffer)
+  -> Maybe Int
+  -> Effect (Maybe Buffer)
 read r size = do
   v <- readEither r size
   case v of
-    Nothing        -> pure Nothing
-    Just (Left _)  -> throw "Stream encoding should not be set"
+    Nothing -> pure Nothing
+    Just (Left _) -> throw "Stream encoding should not be set"
     Just (Right b) -> pure (Just b)
 
 readString
@@ -121,9 +121,9 @@ readString
 readString r size enc = do
   v <- readEither r size
   case v of
-       Nothing          -> pure Nothing
-       Just (Left _)    -> throw "Stream encoding should not be set"
-       Just (Right buf) -> Just <$> Buffer.toString enc buf
+    Nothing -> pure Nothing
+    Just (Left _) -> throw "Stream encoding should not be set"
+    Just (Right buf) -> Just <$> Buffer.toString enc buf
 
 readEither
   :: forall w

@@ -20,7 +20,7 @@
     "purescript-effect": "^4.0.0",
     "purescript-either": "^6.0.0",
     "purescript-exceptions": "^6.0.0",
-    "purescript-node-buffer": "^8.0.0",
+    "purescript-node-buffer": "^9.0.0",
     "purescript-nullable": "^6.0.0",
     "purescript-prelude": "^6.0.0"
   }
