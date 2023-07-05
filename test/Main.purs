@@ -17,7 +17,6 @@ assertEqual :: forall a. Show a => Eq a => a -> a -> Effect Unit
 assertEqual x y =
   assert' (show x <> " did not equal " <> show y) (x == y)
 
-
 foreign import writableStreamBuffer :: Effect (Writable ())
 
 foreign import getContentsAsString :: forall r. Writable r -> Effect String
@@ -58,34 +57,34 @@ testReads = do
   testReadBuf
 
   where
-    testReadString = do
-      sIn <- passThrough
-      v   <- readString sIn Nothing UTF8
-      assert (isNothing v)
+  testReadString = do
+    sIn <- passThrough
+    v <- readString sIn Nothing UTF8
+    assert (isNothing v)
 
-      onReadable sIn do
-        str <- readString sIn Nothing UTF8
-        assert (isJust str)
-        assertEqual (unsafePartial (fromJust str)) testString
-        pure unit
+    onReadable sIn do
+      str <- readString sIn Nothing UTF8
+      assert (isJust str)
+      assertEqual (unsafePartial (fromJust str)) testString
+      pure unit
 
-      writeString sIn UTF8 testString \_ -> do
-        pure unit
+    writeString sIn UTF8 testString \_ -> do
+      pure unit
 
-    testReadBuf = do
-      sIn <- passThrough
-      v   <- read sIn Nothing
-      assert (isNothing v)
+  testReadBuf = do
+    sIn <- passThrough
+    v <- read sIn Nothing
+    assert (isNothing v)
 
-      onReadable sIn do
-        buf <- read sIn Nothing
-        assert (isJust buf)
-        _ <- assertEqual <$> (Buffer.toString UTF8 (unsafePartial (fromJust buf)))
-                    <*> pure testString
-        pure unit
+    onReadable sIn do
+      buf <- read sIn Nothing
+      assert (isJust buf)
+      _ <- assertEqual <$> (Buffer.toString UTF8 (unsafePartial (fromJust buf)))
+        <*> pure testString
+      pure unit
 
-      writeString sIn UTF8 testString \_ -> do
-        pure unit
+    writeString sIn UTF8 testString \_ -> do
+      pure unit
 
 testSetDefaultEncoding :: Effect Boolean
 testSetDefaultEncoding = do
@@ -123,9 +122,9 @@ testSetEncoding = do
 
 testPipe :: Effect Boolean
 testPipe = do
-  sIn   <- passThrough
-  sOut  <- passThrough
-  zip   <- createGzip
+  sIn <- passThrough
+  sOut <- passThrough
+  zip <- createGzip
   unzip <- createGunzip
 
   log "pipe 1"
@@ -140,10 +139,8 @@ testPipe = do
       onDataString sOut UTF8 \str -> do
         assertEqual str testString
 
-
 foreign import createGzip :: Effect Duplex
 foreign import createGunzip :: Effect Duplex
-
 
 -- | Create a PassThrough stream, which simply writes its input to its output.
 foreign import passThrough :: Effect Duplex

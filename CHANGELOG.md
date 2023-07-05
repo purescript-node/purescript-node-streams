@@ -14,6 +14,7 @@ Bugfixes:
 Other improvements:
 - Bumped CI's node version to `lts/*` (#48 by @JordanMartinez)
 - Updated CI `actions/checkout` and `actions/setup-nodee` to `v3` (#48 by @JordanMartinez)
+- Format code via purs-tidy; enforce formatting via CI (#48 by @JordanMartinez)
 
 ## [v7.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v7.0.0) - 2022-04-29
 
