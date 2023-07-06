@@ -207,7 +207,8 @@ readString' r size enc = do
     Just buf -> do
       Just <$> Buffer.toString enc buf
 
--- | Note: this will fail if `setEncoding` has been called on the stream.
+-- | Reads a chunk from the stream. This will work whether or not
+-- | `setEncoding` has been called on the stream.
 readEither :: forall w. Readable w -> Effect (Maybe (Either String Buffer))
 readEither r = do
   chunk <- runEffectFn1 readImpl r
@@ -220,7 +221,8 @@ readEither r = do
         (mkEffectFn1 (pure <<< Just <<< Left))
         c
 
--- | Note: this will fail if `setEncoding` has been called on the stream.
+-- | Reads the given number of bytes from the stream. This will work whether or not
+-- | `setEncoding` has been called on the stream.
 readEither' :: forall w. Readable w -> Int -> Effect (Maybe (Either String Buffer))
 readEither' r size = do
   chunk <- runEffectFn2 readSizeImpl r size
