@@ -1,14 +1,13 @@
 -- | This module provides a low-level wrapper for the [Node Stream API](https://nodejs.org/api/stream.html).
 
 module Node.Stream
-  ( Stream
-  , Read
-  , Readable
+  ( Read
   , Write
+  , Stream
+  , Readable
   , Writable
   , Duplex
   , toEventEmitter
-  , setEncoding
   , closeH
   , errorH
   , drainH
@@ -41,6 +40,7 @@ module Node.Stream
   , writeString'
   , cork
   , uncork
+  , setEncoding
   , setDefaultEncoding
   , end
   , end'
