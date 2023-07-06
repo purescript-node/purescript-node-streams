@@ -61,6 +61,7 @@ Other improvements:
 - Format code via purs-tidy; enforce formatting via CI (#48 by @JordanMartinez)
 - Refactor tests using `passThrough` streams (#49 by @JordanMartinez)
 - Updated FFI to use uncurried functions (#50 by @JordanMartinez)
+- Relocated `setEncoding`, `Read`, and `Write` for better locality in docs (#51 by @JordanMartinez)
 
 ## [v7.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v7.0.0) - 2022-04-29
 
