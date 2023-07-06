@@ -42,8 +42,21 @@ Breaking changes:
 
 New features:
 - Added event handlers for `Writeable` streams (#49 by @JordanMartinez)
+- Added missing APIs (#51 by @JordanMartinez)
+
+  - readable, readableEnded, readableFlowing, readableHighWaterMark, readableLength
+  - pipe'
+  - writeable, writeableEnded, writeableCorked, errored, writeableFinished, writeableHighWaterMark, writeableLength, writeableNeedDrain
+  - closed, destroyed
+  - allowHalfOpen
+  - pipeline
+  - fromString, fromBuffer
+  - newPassThrough
 
 Bugfixes:
+- Drop misleading comment for `setEncoding` (#51 by @JordanMartinez)
+
+  For context, see #37.
 
 Other improvements:
 - Bumped CI's node version to `lts/*` (#48 by @JordanMartinez)
@@ -51,6 +64,7 @@ Other improvements:
 - Format code via purs-tidy; enforce formatting via CI (#48 by @JordanMartinez)
 - Refactor tests using `passThrough` streams (#49 by @JordanMartinez)
 - Updated FFI to use uncurried functions (#50 by @JordanMartinez)
+- Relocated `setEncoding`, `Read`, and `Write` for better locality in docs (#51 by @JordanMartinez)
 
 ## [v7.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v7.0.0) - 2022-04-29
 

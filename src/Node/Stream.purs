@@ -1,14 +1,13 @@
--- | This module provides a low-level wrapper for the [Node Stream API](https://nodejs.org/api/stream.html).
+-- | This module provides a low-level wrapper for the [Node Stream API (v18 LTS)](https://nodejs.org/docs/latest-v18.x/api/stream.html).
 
 module Node.Stream
-  ( Stream
-  , Read
-  , Readable
+  ( Read
   , Write
+  , Stream
+  , Readable
   , Writable
   , Duplex
   , toEventEmitter
-  , setEncoding
   , closeH
   , errorH
   , drainH
@@ -23,10 +22,16 @@ module Node.Stream
   , readableH
   , resumeH
   , endH
+  , readable
+  , readableEnded
+  , readableFlowing
+  , readableHighWaterMark
+  , readableLength
   , resume
   , pause
   , isPaused
   , pipe
+  , pipe'
   , unpipe
   , unpipeAll
   , read
@@ -35,17 +40,33 @@ module Node.Stream
   , readString'
   , readEither
   , readEither'
+  , writeable
+  , writeableEnded
+  , writeableCorked
+  , errored
+  , writeableFinished
+  , writeableHighWaterMark
+  , writeableLength
+  , writeableNeedDrain
   , write
   , write'
   , writeString
   , writeString'
   , cork
   , uncork
+  , setEncoding
   , setDefaultEncoding
   , end
   , end'
   , destroy
   , destroy'
+  , closed
+  , destroyed
+  , allowHalfOpen
+  , pipeline
+  , fromString
+  , fromBuffer
+  , newPassThrough
   ) where
 
 import Prelude
@@ -240,9 +261,6 @@ readEither' r size = do
 -- | Set the encoding used to read chunks as strings from the stream. This
 -- | function may be useful when you are passing a readable stream to some other
 -- | JavaScript library, which already expects an encoding to be set.
--- |
--- | Where possible, you should try to use `onDataString` instead of this
--- | function.
 setEncoding
   :: forall w
    . Readable w
@@ -282,6 +300,31 @@ resumeH = EventHandle "resume" identity
 endH :: forall w. EventHandle0 (Readable w)
 endH = EventHandle "end" identity
 
+readable :: forall w. Readable w -> Effect Boolean
+readable r = runEffectFn1 readableImpl r
+
+foreign import readableImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
+readableEnded :: forall w. Readable w -> Effect Boolean
+readableEnded r = runEffectFn1 readableEndedImpl r
+
+foreign import readableEndedImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
+readableFlowing :: forall w. Readable w -> Effect Boolean
+readableFlowing r = runEffectFn1 readableFlowingImpl r
+
+foreign import readableFlowingImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
+readableHighWaterMark :: forall w. Readable w -> Effect Boolean
+readableHighWaterMark r = runEffectFn1 readableHighWaterMarkImpl r
+
+foreign import readableHighWaterMarkImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
+readableLength :: forall w. Readable w -> Effect Boolean
+readableLength r = runEffectFn1 readableLengthImpl r
+
+foreign import readableLengthImpl :: forall w. EffectFn1 (Readable w) (Boolean)
+
 -- | Resume reading from the stream.
 resume :: forall w. Readable w -> Effect Unit
 resume r = runEffectFn1 resumeImpl r
@@ -306,6 +349,11 @@ pipe r w = runEffectFn2 pipeImpl r w
 
 foreign import pipeImpl :: forall w r. EffectFn2 (Readable w) (Writable r) (Unit)
 
+pipe' :: forall w r. Readable w -> Writable r -> { end :: Boolean } -> Effect Unit
+pipe' r w o = runEffectFn3 pipeCbImpl r w o
+
+foreign import pipeCbImpl :: forall w r. EffectFn3 (Readable w) (Writable r) ({ end :: Boolean }) (Unit)
+
 -- | Detach a Writable stream previously attached using `pipe`.
 unpipe :: forall w r. Readable w -> Writable r -> Effect Unit
 unpipe r w = runEffectFn2 unpipeImpl r w
@@ -317,6 +365,46 @@ unpipeAll :: forall w. Readable w -> Effect Unit
 unpipeAll r = runEffectFn1 unpipeAllImpl r
 
 foreign import unpipeAllImpl :: forall w. EffectFn1 (Readable w) (Unit)
+
+writeable :: forall r. Writable r -> Effect Boolean
+writeable w = runEffectFn1 writeableImpl w
+
+foreign import writeableImpl :: forall r. EffectFn1 (Writable r) (Boolean)
+
+writeableEnded :: forall r. Writable r -> Effect Boolean
+writeableEnded w = runEffectFn1 writeableEndedImpl w
+
+foreign import writeableEndedImpl :: forall r. EffectFn1 (Writable r) (Boolean)
+
+writeableCorked :: forall r. Writable r -> Effect Boolean
+writeableCorked w = runEffectFn1 writeableCorkedImpl w
+
+foreign import writeableCorkedImpl :: forall r. EffectFn1 (Writable r) (Boolean)
+
+errored :: forall rw. Stream rw -> Effect Boolean
+errored rw = runEffectFn1 erroredImpl rw
+
+foreign import erroredImpl :: forall rw. EffectFn1 (Stream rw) (Boolean)
+
+writeableFinished :: forall r. Writable r -> Effect Boolean
+writeableFinished w = runEffectFn1 writeableFinishedImpl w
+
+foreign import writeableFinishedImpl :: forall r. EffectFn1 (Writable r) (Boolean)
+
+writeableHighWaterMark :: forall r. Writable r -> Effect Number
+writeableHighWaterMark w = runEffectFn1 writeableHighWaterMarkImpl w
+
+foreign import writeableHighWaterMarkImpl :: forall r. EffectFn1 (Writable r) (Number)
+
+writeableLength :: forall r. Writable r -> Effect Number
+writeableLength w = runEffectFn1 writeableLengthImpl w
+
+foreign import writeableLengthImpl :: forall r. EffectFn1 (Writable r) (Number)
+
+writeableNeedDrain :: forall r. Writable r -> Effect Boolean
+writeableNeedDrain w = runEffectFn1 writeableNeedDrainImpl w
+
+foreign import writeableNeedDrainImpl :: forall r. EffectFn1 (Writable r) (Boolean)
 
 write :: forall r. Writable r -> Buffer -> Effect Boolean
 write w b = runEffectFn2 writeImpl w b
@@ -385,3 +473,34 @@ destroy' w e = runEffectFn2 destroyErrorImpl w e
 
 foreign import destroyErrorImpl :: forall r. EffectFn2 (Stream r) (Error) Unit
 
+closed :: forall r. Stream r -> Effect Boolean
+closed w = runEffectFn1 closedImpl w
+
+foreign import closedImpl :: forall r. EffectFn1 (Stream r) (Boolean)
+
+destroyed :: forall r. Stream r -> Effect Boolean
+destroyed w = runEffectFn1 destroyedImpl w
+
+foreign import destroyedImpl :: forall r. EffectFn1 (Stream r) (Boolean)
+
+allowHalfOpen :: Duplex -> Effect Boolean
+allowHalfOpen d = runEffectFn1 allowHalfOpenImpl d
+
+foreign import allowHalfOpenImpl :: EffectFn1 (Duplex) (Boolean)
+
+pipeline :: forall w r. Readable w -> Array Duplex -> Writable r -> (Error -> Effect Unit) -> Effect Unit
+pipeline src transforms dest cb = runEffectFn4 pipelineImpl src transforms dest cb
+
+foreign import pipelineImpl :: forall w r. EffectFn4 (Readable w) (Array Duplex) (Writable r) ((Error -> Effect Unit)) (Unit)
+
+fromString :: String -> Effect (Readable ())
+fromString str = runEffectFn1 readableFromStrImpl str
+
+foreign import readableFromStrImpl :: EffectFn1 (String) (Readable ())
+
+fromBuffer :: Buffer -> Effect (Readable ())
+fromBuffer buf = runEffectFn1 readableFromBufImpl buf
+
+foreign import readableFromBufImpl :: EffectFn1 (Buffer) (Readable ())
+
+foreign import newPassThrough :: Effect Duplex
