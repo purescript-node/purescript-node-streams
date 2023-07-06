@@ -6,8 +6,27 @@ Notable changes to this project are documented in this file. The format is based
 
 Breaking changes:
 - Update `node-buffer` to `v9.0.0` (#48 by @JordanMartinez)
+- Reimplement event handlers using `eventNameH`-style API (#49 by @JordanMartinez)
+
+  Previously, one would write something like the following, and be unable to remove
+  the resulting listener.
+  ```purs
+  Stream.onData stream \buffer -> do
+    ...
+  ```
+
+  Now, one writes such a thing via `on` (or a similar function) from `node-event-emitter`:
+  ```purs
+  -- if the listener should be removed later, use `on`.
+  removeListener <- stream # on dataH \buffer -> do
+    ...
+  -- if it doesn't need to be removed, use `on_`.
+  stream # on_ dataH \buffer -> do
+    ...
+  ```
 
 New features:
+- Added event handlers for `Writeable` streams (#49 by @JordanMartinez)
 
 Bugfixes:
 
@@ -15,6 +34,7 @@ Other improvements:
 - Bumped CI's node version to `lts/*` (#48 by @JordanMartinez)
 - Updated CI `actions/checkout` and `actions/setup-nodee` to `v3` (#48 by @JordanMartinez)
 - Format code via purs-tidy; enforce formatting via CI (#48 by @JordanMartinez)
+- Refactor tests using `passThrough` streams (#49 by @JordanMartinez)
 
 ## [v7.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v7.0.0) - 2022-04-29
 
