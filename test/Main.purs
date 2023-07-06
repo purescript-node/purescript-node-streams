@@ -9,7 +9,7 @@ import Effect.Exception (error)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(..))
 import Node.EventEmitter (on_)
-import Node.Stream (Duplex, dataH, dataHStr, destroy', end, end', errorH, pipe, read, readString, readableH, setDefaultEncoding, setEncoding, writeString, writeString')
+import Node.Stream (Duplex, dataH, dataHStr, destroy', end, end', errorH, newPassThrough, pipe, read, readString, readableH, setDefaultEncoding, setEncoding, writeString, writeString')
 import Partial.Unsafe (unsafePartial)
 import Test.Assert (assert, assert')
 
@@ -47,7 +47,7 @@ testReads = do
 
   where
   testReadString = do
-    sIn <- passThrough
+    sIn <- newPassThrough
     v <- readString sIn UTF8
     assert (isNothing v)
 
@@ -60,7 +60,7 @@ testReads = do
     void $ writeString sIn UTF8 testString
 
   testReadBuf = do
-    sIn <- passThrough
+    sIn <- newPassThrough
     v <- read sIn
     assert (isNothing v)
 
@@ -75,10 +75,10 @@ testReads = do
 
 testSetDefaultEncoding :: Effect Unit
 testSetDefaultEncoding = do
-  w1 <- passThrough
+  w1 <- newPassThrough
   check w1
 
-  w2 <- passThrough
+  w2 <- newPassThrough
   setDefaultEncoding w2 UCS2
   check w2
 
@@ -96,10 +96,10 @@ testSetEncoding = do
   check UCS2
   where
   check enc = do
-    r1 <- passThrough
+    r1 <- newPassThrough
     void $ writeString r1 enc testString
 
-    r2 <- passThrough
+    r2 <- newPassThrough
     void $ writeString r1 enc testString
     setEncoding r2 enc
 
@@ -110,8 +110,8 @@ testSetEncoding = do
 
 testPipe :: Effect Unit
 testPipe = do
-  sIn <- passThrough
-  sOut <- passThrough
+  sIn <- newPassThrough
+  sOut <- newPassThrough
   zip <- createGzip
   unzip <- createGunzip
 
@@ -131,23 +131,20 @@ testPipe = do
 foreign import createGzip :: Effect Duplex
 foreign import createGunzip :: Effect Duplex
 
--- | Create a PassThrough stream, which simply writes its input to its output.
-foreign import passThrough :: Effect Duplex
-
 testWrite :: Effect Unit
 testWrite = do
   hasError
   noError
   where
   hasError = do
-    w1 <- passThrough
+    w1 <- newPassThrough
     w1 # on_ errorH (const $ pure unit)
     end w1
     void $ writeString' w1 UTF8 "msg" \err -> do
       assert' "writeString - should have error" $ isJust err
 
   noError = do
-    w1 <- passThrough
+    w1 <- newPassThrough
     void $ writeString' w1 UTF8 "msg1" \err -> do
       assert' "writeString - should have no error" $ isNothing err
     end w1
@@ -158,7 +155,7 @@ testEnd = do
   noError
   where
   hasError = do
-    w1 <- passThrough
+    w1 <- newPassThrough
     w1 # on_ errorH (const $ pure unit)
     void $ writeString' w1 UTF8 "msg" \_ -> do
       _ <- destroy' w1 $ error "Problem"
@@ -166,6 +163,6 @@ testEnd = do
         assert' "end - should have error" $ isJust err
 
   noError = do
-    w1 <- passThrough
+    w1 <- newPassThrough
     end' w1 \err -> do
       assert' "end - should have no error" $ isNothing err

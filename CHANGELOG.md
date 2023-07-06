@@ -42,6 +42,16 @@ Breaking changes:
 
 New features:
 - Added event handlers for `Writeable` streams (#49 by @JordanMartinez)
+- Added missing APIs (#51 by @JordanMartinez)
+
+  - readable, readableEnded, readableFlowing, readableHighWaterMark, readableLength
+  - pipe'
+  - writeable, writeableEnded, writeableCorked, errored, writeableFinished, writeableHighWaterMark, writeableLength, writeableNeedDrain
+  - closed, destroyed
+  - allowHalfOpen
+  - pipeline
+  - fromString, fromBuffer
+  - newPassThrough
 
 Bugfixes:
 

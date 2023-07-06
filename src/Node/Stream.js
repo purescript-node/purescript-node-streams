@@ -1,3 +1,5 @@
+import stream from "node:stream";
+
 export const setEncodingImpl = (s, enc) => s.setEncoding(enc);
 
 export const readChunkImpl = (useBuffer, useString, chunk) => {
@@ -14,6 +16,16 @@ export const readChunkImpl = (useBuffer, useString, chunk) => {
   }
 };
 
+export const readableImpl = (r) => r.readable;
+
+export const readableEndedImpl = (r) => r.readableEnded;
+
+export const readableFlowingImpl = (r) => r.readableFlowing;
+
+export const readableHighWaterMarkImpl = (r) => r.readableHighWaterMark;
+
+export const readableLengthImpl = (r) => r.readableLength;
+
 export const resumeImpl = (r) => r.resume();
 
 export const pauseImpl = (r) => r.pause;
@@ -21,6 +33,8 @@ export const pauseImpl = (r) => r.pause;
 export const isPausedImpl = (r) => r.isPaused;
 
 export const pipeImpl = (r, w) => r.pipe(w);
+
+export const pipeCbImpl = (r, w, cb) => r.pipe(w, cb);
 
 export const unpipeAllImpl = (r) => r.unpipe();
 
@@ -48,6 +62,36 @@ export const endCbImpl = (w, cb) => w.end(cb);
 
 export const endImpl = (w) => w.end();
 
+export const writeableImpl = (w) => w.writeable;
+
+export const writeableEndedImpl = (w) => w.writeableEnded;
+
+export const writeableCorkedImpl = (w) => w.writeableCorked;
+
+export const erroredImpl = (w) => w.errored;
+
+export const writeableFinishedImpl = (w) => w.writeableFinished;
+
+export const writeableHighWaterMarkImpl = (w) => w.writeableHighWaterMark;
+
+export const writeableLengthImpl = (w) => w.writeableLength;
+
+export const writeableNeedDrainImpl = (w) => w.writeableNeedDrain;
+
 export const destroyImpl = (w) => w.destroy();
 
 export const destroyErrorImpl = (w, e) => w.destroy(e);
+
+export const closedImpl = (w) => w.closed;
+
+export const destroyedImpl = (w) => w.destroyed;
+
+export const allowHalfOpenImpl = (d) => d.allowHalfOpen;
+
+export const pipelineImpl = (src, transforms, dst, cb) => stream.pipeline([src, ...transforms, dst], cb);
+
+export const readableFromStrImpl = (str) => stream.Readable.from(str, { objectMode: false });
+
+export const readableFromBufImpl = (buf) => stream.Readable.from(buf, { objectMode: false });
+
+export const newPassThrough = () => new stream.PassThrough({ objectMode: false });
