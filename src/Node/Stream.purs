@@ -33,6 +33,8 @@ module Node.Stream
   , read'
   , readString
   , readString'
+  , readEither
+  , readEither'
   , write
   , writeString
   , cork
@@ -170,7 +172,10 @@ read' r size = do
 
 foreign import readSizeImpl :: forall w. EffectFn2 (Readable w) (Int) (Nullable Chunk)
 
+-- | Reads the stream to get a Buffer and converts that into a String
+-- | with the given encoding.
 -- | Note: this will fail if `setEncoding` has been called on the stream.
+-- | If that is the case, use `readEither` instead.
 readString
   :: forall w
    . Readable w
@@ -184,7 +189,10 @@ readString r enc = do
     Just buf -> do
       Just <$> Buffer.toString enc buf
 
+-- | Reads the given number of bytes from the stream to get a Buffer
+-- | and converts that into a String with the given encoding.
 -- | Note: this will fail if `setEncoding` has been called on the stream.
+-- | If that is the case, use `readEither'` instead.
 readString'
   :: forall w
    . Readable w
@@ -198,6 +206,32 @@ readString' r size enc = do
       pure Nothing
     Just buf -> do
       Just <$> Buffer.toString enc buf
+
+-- | Note: this will fail if `setEncoding` has been called on the stream.
+readEither :: forall w. Readable w -> Effect (Maybe (Either String Buffer))
+readEither r = do
+  chunk <- runEffectFn1 readImpl r
+  case toMaybe chunk of
+    Nothing ->
+      pure Nothing
+    Just c ->
+      runEffectFn3 readChunkImpl
+        (mkEffectFn1 (pure <<< Just <<< Right))
+        (mkEffectFn1 (pure <<< Just <<< Left))
+        c
+
+-- | Note: this will fail if `setEncoding` has been called on the stream.
+readEither' :: forall w. Readable w -> Int -> Effect (Maybe (Either String Buffer))
+readEither' r size = do
+  chunk <- runEffectFn2 readSizeImpl r size
+  case toMaybe chunk of
+    Nothing ->
+      pure Nothing
+    Just c ->
+      runEffectFn3 readChunkImpl
+        (mkEffectFn1 (pure <<< Just <<< Right))
+        (mkEffectFn1 (pure <<< Just <<< Left))
+        c
 
 foreign import setEncodingImpl
   :: forall w
