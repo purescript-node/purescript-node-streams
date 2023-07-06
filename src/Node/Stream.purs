@@ -41,7 +41,6 @@ module Node.Stream
   , writeString'
   , cork
   , uncork
-  , setEncoding
   , setDefaultEncoding
   , end
   , end'
