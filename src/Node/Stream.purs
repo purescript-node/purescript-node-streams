@@ -261,9 +261,6 @@ readEither' r size = do
 -- | Set the encoding used to read chunks as strings from the stream. This
 -- | function may be useful when you are passing a readable stream to some other
 -- | JavaScript library, which already expects an encoding to be set.
--- |
--- | Where possible, you should try to use `onDataString` instead of this
--- | function.
 setEncoding
   :: forall w
    . Readable w

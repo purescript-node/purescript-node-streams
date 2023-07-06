@@ -54,6 +54,9 @@ New features:
   - newPassThrough
 
 Bugfixes:
+- Drop misleading comment for `setEncoding` (#51 by @JordanMartinez)
+
+  For context, see #37.
 
 Other improvements:
 - Bumped CI's node version to `lts/*` (#48 by @JordanMartinez)
