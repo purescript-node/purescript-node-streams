@@ -24,6 +24,21 @@ Breaking changes:
   stream # on_ dataH \buffer -> do
     ...
   ```
+- Renamed functions to better adhere to naming consistency (#50 by @JordanMartinez)
+
+  All functions that take an optional callback are now 
+  named using the following schema:
+  - no callback: `functionName`
+  - with callback: `functionName'`
+
+  Thus, the following were renamed:
+  - `write` was renamed to `write'`
+  - `writeString` was renamed to `writeString'`
+  - `end` was renamed to `end'`
+  - `destroyWithError` was renamed to `destroy'`
+
+  `write`, `writeString`, and `end` now refer to their non-callback versions.
+
 
 New features:
 - Added event handlers for `Writeable` streams (#49 by @JordanMartinez)
@@ -35,6 +50,7 @@ Other improvements:
 - Updated CI `actions/checkout` and `actions/setup-nodee` to `v3` (#48 by @JordanMartinez)
 - Format code via purs-tidy; enforce formatting via CI (#48 by @JordanMartinez)
 - Refactor tests using `passThrough` streams (#49 by @JordanMartinez)
+- Updated FFI to use uncurried functions (#50 by @JordanMartinez)
 
 ## [v7.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v7.0.0) - 2022-04-29
 

@@ -9,7 +9,7 @@ import Effect.Exception (error)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(..))
 import Node.EventEmitter (on_)
-import Node.Stream (Duplex, dataH, dataHStr, destroyWithError, end, errorH, pipe, read, readString, readableH, setDefaultEncoding, setEncoding, writeString)
+import Node.Stream (Duplex, dataH, dataHStr, destroy', end, end', errorH, pipe, read, readString, readableH, setDefaultEncoding, setEncoding, writeString, writeString')
 import Partial.Unsafe (unsafePartial)
 import Test.Assert (assert, assert')
 
@@ -57,8 +57,7 @@ testReads = do
       assertEqual (unsafePartial (fromJust str)) testString
       pure unit
 
-    void $ writeString sIn UTF8 testString \_ -> do
-      pure unit
+    void $ writeString sIn UTF8 testString
 
   testReadBuf = do
     sIn <- passThrough
@@ -72,8 +71,7 @@ testReads = do
         <*> pure testString
       pure unit
 
-    void $ writeString sIn UTF8 testString \_ -> do
-      pure unit
+    void $ writeString sIn UTF8 testString
 
 testSetDefaultEncoding :: Effect Unit
 testSetDefaultEncoding = do
@@ -89,7 +87,7 @@ testSetDefaultEncoding = do
     w # on_ dataH \buf -> do
       str <- Buffer.toString UTF8 buf
       assertEqual testString str
-    void $ writeString w UTF8 testString mempty
+    void $ writeString w UTF8 testString
 
 testSetEncoding :: Effect Unit
 testSetEncoding = do
@@ -99,10 +97,10 @@ testSetEncoding = do
   where
   check enc = do
     r1 <- passThrough
-    void $ writeString r1 enc testString mempty
+    void $ writeString r1 enc testString
 
     r2 <- passThrough
-    void $ writeString r1 enc testString mempty
+    void $ writeString r1 enc testString
     setEncoding r2 enc
 
     r1 # on_ dataH \buf -> do
@@ -124,8 +122,8 @@ testPipe = do
   log "pipe 3"
   _ <- unzip `pipe` sOut
 
-  void $ writeString sIn UTF8 testString \_ -> do
-    void $ end sIn \_ -> do
+  void $ writeString' sIn UTF8 testString \_ -> do
+    end' sIn \_ -> do
       sOut # on_ dataH \buf -> do
         str <- Buffer.toString UTF8 buf
         assertEqual str testString
@@ -144,15 +142,15 @@ testWrite = do
   hasError = do
     w1 <- passThrough
     w1 # on_ errorH (const $ pure unit)
-    end w1 mempty
-    void $ writeString w1 UTF8 "msg" \err -> do
+    end w1
+    void $ writeString' w1 UTF8 "msg" \err -> do
       assert' "writeString - should have error" $ isJust err
 
   noError = do
     w1 <- passThrough
-    void $ writeString w1 UTF8 "msg1" \err -> do
+    void $ writeString' w1 UTF8 "msg1" \err -> do
       assert' "writeString - should have no error" $ isNothing err
-    void $ end w1 mempty
+    end w1
 
 testEnd :: Effect Unit
 testEnd = do
@@ -162,12 +160,12 @@ testEnd = do
   hasError = do
     w1 <- passThrough
     w1 # on_ errorH (const $ pure unit)
-    void $ writeString w1 UTF8 "msg" \_ -> do
-      _ <- destroyWithError w1 $ error "Problem"
-      void $ end w1 \err -> do
+    void $ writeString' w1 UTF8 "msg" \_ -> do
+      _ <- destroy' w1 $ error "Problem"
+      end' w1 \err -> do
         assert' "end - should have error" $ isJust err
 
   noError = do
     w1 <- passThrough
-    void $ end w1 \err -> do
+    end' w1 \err -> do
       assert' "end - should have no error" $ isNothing err
