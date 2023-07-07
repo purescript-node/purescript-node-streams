@@ -106,9 +106,9 @@ import Effect.Ref as Ref
 import Node.Buffer (Buffer)
 import Node.Buffer as Buffer
 import Node.Encoding as Encoding
-import Node.Stream (Readable, Writable)
+import Node.EventEmitter (once)
+import Node.Stream (Readable, Writable, closeH, drainH, endH, errorH, readable, readableH)
 import Node.Stream as Stream
-import Node.Stream.Aff.Internal (onceClose, onceDrain, onceEnd, onceError, onceReadable, readable)
 
 -- | Wait until there is some data available from the stream, then read it.
 -- |
@@ -122,15 +122,15 @@ readSome
 readSome r = liftAff <<< makeAff $ \complete -> do
   bufs <- liftST $ Array.ST.new
 
-  removeError <- onceError r \err -> complete (Left err)
+  removeError <- r # once errorH \err -> complete (Left err)
 
-  removeClose <- onceClose r do
+  removeClose <- r # once closeH do
     -- Don't error, instead return whatever we've read.
     removeError
     ret <- liftST $ Array.ST.unsafeFreeze bufs
     complete (Right { buffers: ret, readagain: false })
 
-  removeEnd <- onceEnd r do
+  removeEnd <- r # once endH do
     removeError
     removeClose
     ret <- liftST $ Array.ST.unsafeFreeze bufs
@@ -149,7 +149,7 @@ readSome r = liftAff <<< makeAff $ \complete -> do
       do
         -- try to read right away.
         untilE do
-          Stream.read r Nothing >>= case _ of
+          Stream.read r >>= case _ of
             Nothing -> pure true
             Just chunk -> do
               void $ liftST $ Array.ST.push chunk bufs
@@ -164,9 +164,9 @@ readSome r = liftAff <<< makeAff $ \complete -> do
           -- stream data has been reached but before the 'end' event is emitted.”
           -- if not readable then this was a zero-length Readable stream.
           -- https://nodejs.org/api/stream.html#event-readable
-          removeReadable <- onceReadable r do
+          removeReadable <- r # once readableH do
             untilE do
-              Stream.read r Nothing >>= case _ of
+              Stream.read r >>= case _ of
                 Nothing -> pure true
                 Just chunk -> do
                   void $ liftST $ Array.ST.push chunk bufs
@@ -210,18 +210,18 @@ readAll r = liftAff <<< makeAff $ \complete -> do
   bufs <- liftST $ Array.ST.new
   removeReadable <- Ref.new (pure unit :: Effect Unit)
 
-  removeError <- onceError r \err -> do
+  removeError <- r # once errorH \err -> do
     join $ Ref.read removeReadable
     complete (Left err)
 
-  removeClose <- onceClose r do
+  removeClose <- r # once closeH do
     -- Don't error, instead return whatever we've read.
     removeError
     join $ Ref.read removeReadable -- can 'close' be raised while waiting for 'readable'? Maybe?
     ret <- liftST $ Array.ST.unsafeFreeze bufs
     complete (Right ret)
 
-  removeEnd <- onceEnd r do
+  removeEnd <- r # once endH do
     removeError
     removeClose
     ret <- liftST $ Array.ST.unsafeFreeze bufs
@@ -241,7 +241,7 @@ readAll r = liftAff <<< makeAff $ \complete -> do
     ifM (readable r)
       do
         untilE do
-          Stream.read r Nothing >>= case _ of
+          Stream.read r >>= case _ of
             Nothing -> pure true
             Just chunk -> do
               void $ liftST $ Array.ST.push chunk bufs
@@ -250,11 +250,11 @@ readAll r = liftAff <<< makeAff $ \complete -> do
         -- then wait for the stream to be readable until the stream has ended.
         let
           waitToRead = do
-            removeReadable' <- onceReadable r do
+            removeReadable' <- r # once readableH do
               -- “The 'readable' event will also be emitted once the end of the
               -- stream data has been reached but before the 'end' event is emitted.”
               untilE do
-                Stream.read r Nothing >>= case _ of
+                Stream.read r >>= case _ of
                   Nothing -> pure true
                   Just chunk -> do
                     _ <- liftST $ Array.ST.push chunk bufs
@@ -298,18 +298,18 @@ readN r n = liftAff <<< makeAff $ \complete ->
     removeReadable <- Ref.new (pure unit :: Effect Unit)
 
     -- On error, we're not calling removeClose or removeEnd... maybe that's fine?
-    removeError <- onceError r \err -> do
+    removeError <- r # once errorH \err -> do
       join $ Ref.read removeReadable
       complete (Left err)
 
-    removeClose <- onceClose r do
+    removeClose <- r # once closeH do
       -- Don't error, instead return whatever we've read.
       removeError
       join $ Ref.read removeReadable
       ret <- liftST $ Array.ST.unsafeFreeze bufs
       complete (Right { buffers: ret, readagain: false })
 
-    removeEnd <- onceEnd r do
+    removeEnd <- r # once endH do
       removeError
       removeClose
       ret <- liftST $ Array.ST.unsafeFreeze bufs
@@ -332,7 +332,7 @@ readN r n = liftAff <<< makeAff $ \complete ->
           -- “If size bytes are not available to be read, null will be returned
           -- unless the stream has ended, in which case all of the data remaining
           -- in the internal buffer will be returned.”
-          Stream.read r (Just (n - red)) >>= case _ of
+          Stream.read' r (n - red) >>= case _ of
             Nothing -> pure true
             Just chunk -> do
               _ <- liftST $ Array.ST.push chunk bufs
@@ -355,7 +355,7 @@ readN r n = liftAff <<< makeAff $ \complete ->
 
       -- if there were not enough bytes right away, then wait for bytes to come in.
       waitToRead _ = do
-        removeReadable' <- onceReadable r do
+        removeReadable' <- r # once readableH do
           tryToRead waitToRead -- not recursion
         Ref.write removeReadable' removeReadable
 
@@ -401,7 +401,7 @@ write w bs = liftAff <<< makeAff $ \complete -> do
           -- If an error occurs, the callback will be called with the error
           -- as its first argument. The callback is called asynchronously and
           -- before 'error' is emitted.”
-          nobackpressure <- Stream.write w b $ case _ of
+          nobackpressure <- Stream.write' w b $ case _ of
             Nothing -> do
               pure unit
             Just err -> do
@@ -410,7 +410,7 @@ write w bs = liftAff <<< makeAff $ \complete -> do
           if nobackpressure then do
             pure (Loop (i + 1))
           else do
-            removeDrain' <- onceDrain w (oneWrite (i + 1))
+            removeDrain' <- w # once drainH (oneWrite (i + 1))
             Ref.write removeDrain' removeDrain
             pure (Done unit)
   oneWrite 0
@@ -433,7 +433,7 @@ end
   => Writable w
   -> m Unit
 end w = liftAff <<< makeAff $ \complete -> do
-  Stream.end w $ case _ of
+  Stream.end' w $ case _ of
     Nothing -> complete (Right unit)
     Just err -> complete (Left err)
   pure nonCanceler
