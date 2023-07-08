@@ -18,7 +18,8 @@
 -- |
 -- | #### Implementation
 -- |
--- | The reading functions in this module all operate on a `Readable` stream
+-- | The `read*` functions (not to be confused with the `readable*` functions)
+-- | in this module all operate on a `Readable` stream
 -- | in
 -- | [“paused mode”](https://nodejs.org/docs/latest/api/stream.html#stream_two_reading_modes).
 -- |
@@ -80,7 +81,10 @@
 -- |
 -- | If a write fails then it will `throwError` in the `Aff`.
 module Node.Stream.Aff
-  ( readSome
+  ( readableToStringUtf8
+  , readableToString
+  , readableToBuffers
+  , readSome
   , readAll
   , readN
   , write
@@ -105,10 +109,74 @@ import Effect.Exception (catchException)
 import Effect.Ref as Ref
 import Node.Buffer (Buffer)
 import Node.Buffer as Buffer
+import Node.Encoding (Encoding(..))
 import Node.Encoding as Encoding
-import Node.EventEmitter (once)
-import Node.Stream (Readable, Writable, closeH, drainH, endH, errorH, readable, readableH)
+import Node.EventEmitter (on, once)
+import Node.Stream (Readable, Writable, closeH, dataH, drainH, endH, errorH, readable, readableH)
 import Node.Stream as Stream
+
+-- | Works on streams in "flowing" mode. 
+-- | Reads all of the stream's contents into a buffer
+-- | and converts the result into a UTF8-encoded String.
+readableToStringUtf8
+  :: forall m w
+   . MonadAff m
+  => Readable w
+  -> m String
+readableToStringUtf8 r = readableToString r UTF8
+
+-- | Works on streams in "flowing" mode. 
+-- | Reads all of the stream's contents into a buffer
+-- | and converts the result into a String using the provided encoding.
+readableToString
+  :: forall m w
+   . MonadAff m
+  => Readable w
+  -> Encoding
+  -> m String
+readableToString r enc = do
+  bufs <- readableToBuffers r
+  liftEffect $ Buffer.toString enc =<< Buffer.concat bufs
+
+-- | Works on streams in "flowing" mode.
+-- | Reads all of the stream's buffered contents into an array.
+readableToBuffers
+  :: forall m w
+   . MonadAff m
+  => Readable w
+  -> m (Array Buffer)
+readableToBuffers r = liftAff $ makeAff \complete -> do
+  bufs <- liftST $ Array.ST.new
+  dataRef <- Ref.new (mempty :: Effect Unit)
+  let removeData = join $ Ref.read dataRef
+
+  removeError <- r # once errorH \err -> do
+    removeData
+    complete $ Left err
+
+  removeClose <- r # once closeH do
+    -- Don't error, instead return whatever we've read.
+    removeError
+    removeData
+    result <- liftST $ Array.ST.unsafeFreeze bufs
+    complete $ Right result
+
+  removeEnd <- r # once endH do
+    removeError
+    removeClose
+    removeData
+    result <- liftST $ Array.ST.unsafeFreeze bufs
+    complete $ Right result
+
+  rmData <- r # on dataH \buf ->
+    void $ liftST $ Array.ST.push buf bufs
+
+  Ref.write rmData dataRef
+  pure $ effectCanceler do
+    removeError
+    removeClose
+    removeEnd
+    removeData
 
 -- | Works on streams in "paused" mode. 
 -- | Wait until there is some data available from the stream, then read it.
