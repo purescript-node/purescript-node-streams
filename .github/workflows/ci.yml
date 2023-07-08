@@ -33,7 +33,11 @@ jobs:
       - name: Run tests
         run: |
           bower install
-          npm run-script test --if-present
+          pulp test
+          pulp test --main Test.Main1
+          pulp test --main Test.Main2 | wc -c
+          pulp test --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
+          pulp test --main Test.Main4
 
       - name: Check formatting
         run: |
