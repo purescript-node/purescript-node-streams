@@ -117,7 +117,7 @@ import Node.Stream as Stream
 
 -- | Works on streams in "flowing" mode. 
 -- | Reads all of the stream's contents into a buffer
--- | and converts the result into a String using the provided encoding.
+-- | and converts the result into a UTF8-encoded String.
 readableToStringUtf8
   :: forall m w
    . MonadAff m
