@@ -68,6 +68,11 @@ New features:
   - fromStringUTF8
 
   The only APIs from the library not added were `newReadable` and `push`.
+- Added convenience API for converting `Readable` to `String` or `Buffer` (#53 by @JordanMartinez)
+
+  - `readableToStringUtf8`
+  - `readableToString`
+  - `readableToBuffers`
 
 Bugfixes:
 - Drop misleading comment for `setEncoding` (#51 by @JordanMartinez)
