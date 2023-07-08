@@ -19,6 +19,7 @@ import Effect.Aff (Aff, Milliseconds(..), launchAff_)
 import Effect.Class (liftEffect)
 import Node.Buffer (Buffer, concat)
 import Node.Buffer as Buffer
+import Node.Encoding (Encoding(..))
 import Node.Stream (Readable, Writable, destroy, newPassThrough)
 import Node.Stream as Stream
 import Node.Stream.Aff (end, fromStringUTF8, readAll, readN, readSome, toStringUTF8, write)
@@ -51,19 +52,19 @@ main = unsafePartial $ do
             , void $ readSome s
             ]
         it "reads from a zero-length Readable" do
-          r <- liftEffect $ Stream.fromString ""
+          r <- liftEffect $ Stream.readableFromString "" UTF8
           -- readSome should return readagain false
           shouldEqual { buffers: "", readagain: true } =<< toStringBuffers =<< readSome r
           shouldEqual "" =<< toStringUTF8 =<< readAll r
           shouldEqual { buffers: "", readagain: false } =<< toStringBuffers =<< readN r 0
         it "readN cleans up event handlers" do
-          s <- liftEffect $ Stream.fromString ""
+          s <- liftEffect $ Stream.readableFromString "" UTF8
           for_ (0 .. 100) \_ -> void $ readN s 0
         it "readSome cleans up event handlers" do
-          s <- liftEffect $ Stream.fromString ""
+          s <- liftEffect $ Stream.readableFromString "" UTF8
           for_ (0 .. 100) \_ -> void $ readSome s
         it "readAll cleans up event handlers" do
-          s <- liftEffect $ Stream.fromString ""
+          s <- liftEffect $ Stream.readableFromString "" UTF8
           for_ (0 .. 100) \_ -> void $ readAll s
         it "write cleans up event handlers" do
           s <- liftEffect $ newPassThrough

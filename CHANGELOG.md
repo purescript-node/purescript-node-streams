@@ -42,7 +42,7 @@ Breaking changes:
 
 New features:
 - Added event handlers for `Writeable` streams (#49 by @JordanMartinez)
-- Added missing APIs (#51 by @JordanMartinez)
+- Added missing APIs (#51, #53 by @JordanMartinez)
 
   - readable, readableEnded, readableFlowing, readableHighWaterMark, readableLength
   - pipe'
@@ -50,7 +50,7 @@ New features:
   - closed, destroyed
   - allowHalfOpen
   - pipeline
-  - fromString, fromBuffer
+  - readableFromString, readableFromBuffer
   - newPassThrough
 - Integrated `node-streams-aff` into library (#52 by @JordanMartinez)
 
