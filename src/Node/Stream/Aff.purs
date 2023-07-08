@@ -43,7 +43,7 @@
 -- | `Node.Buffer.size :: Buffer -> m Int`.
 -- |
 -- | ```
--- | {buffers} :: Array Buffer <- readSome stdin
+-- | { buffers } :: Array Buffer <- readSome stdin
 -- | bytesRead :: Int
 -- |     <- liftEffect $ Array.foldM (\a b -> (a+_) <$> size b) 0 buffers
 -- | ```
@@ -53,14 +53,14 @@
 -- | The `readagain` field of the result is a `Boolean` flag which
 -- | is `true` if the stream has not reached End-Of-File (and also if the stream
 -- | has not errored or been destroyed), so we know we can read again.
--- | If the flag is `false` then the stream is not `readable`
+-- | If the flag is `false` then the stream is not `readable`;
 -- | no more bytes will ever be produced by the stream.
 -- |
 -- | Reading from an ended, closed, errored, or destroyed stream
--- | will complete immediately with `{buffers:[], readagain:false}`.
+-- | will complete immediately with `{ buffers: [], readagain: false }`.
 -- |
 -- | The `readagain` flag will give the same answer as a
--- | subsequent call to `Internal.readable`.
+-- | subsequent call to `readable`.
 -- |
 -- | ## Writing
 -- |
@@ -110,6 +110,7 @@ import Node.EventEmitter (once)
 import Node.Stream (Readable, Writable, closeH, drainH, endH, errorH, readable, readableH)
 import Node.Stream as Stream
 
+-- | Works on streams in "paused" mode. 
 -- | Wait until there is some data available from the stream, then read it.
 -- |
 -- | This function is useful for streams like __stdin__ which never
@@ -194,6 +195,7 @@ readSome r = liftAff <<< makeAff $ \complete -> do
     complete (Right { buffers: [], readagain: false })
     pure nonCanceler
 
+-- | Works on streams in "paused" mode. 
 -- | Read all data until the end of the stream. After completion the stream
 -- | will no longer be `readable`.
 -- |
@@ -270,6 +272,7 @@ readAll r = liftAff <<< makeAff $ \complete -> do
     complete (Right [])
     pure nonCanceler
 
+-- | Works on streams in "paused" mode. 
 -- | Wait for *N* bytes to become available from the stream.
 -- |
 -- | If more than *N* bytes are available on the stream, then
