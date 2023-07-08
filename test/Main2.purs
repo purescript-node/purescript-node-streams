@@ -1,9 +1,9 @@
 -- | How to test:
 -- |
 -- | ```
--- | spago -x spago-dev.dhall test --main Test2 | wc -c
+-- | pulp test --main Test.Main2 | wc -c
 -- | ```
-module Test2 where
+module Test.Main2 where
 
 import Prelude
 
@@ -15,10 +15,12 @@ import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(..))
-import Node.Process (stdout)
+import Node.Stream (Writable)
 import Node.Stream.Aff (write)
 import Partial.Unsafe (unsafePartial)
 import Unsafe.Coerce (unsafeCoerce)
+
+foreign import stdout :: Writable ()
 
 completion :: Either Error (Effect Unit) -> Effect Unit
 completion = case _ of

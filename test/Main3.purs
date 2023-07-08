@@ -1,9 +1,9 @@
 -- | How to test:
 -- |
 -- | ```
--- | spago -x spago-dev.dhall test --main Test3 --exec-args <(head --bytes 1000000 /dev/zero)
+-- | pulp test --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
 -- | ```
-module Test3 where
+module Test.Main3 where
 
 import Prelude
 
@@ -15,8 +15,7 @@ import Effect.Class (liftEffect)
 import Effect.Class.Console as Console
 import Node.Buffer (Buffer, concat)
 import Node.Buffer as Buffer
-import Node.FS.Stream (createReadStream)
-import Node.Process (argv)
+import Node.Stream (Readable)
 import Node.Stream.Aff (readAll, readN, readSome)
 import Partial.Unsafe (unsafePartial)
 import Test.Spec (describe, it)
@@ -24,6 +23,9 @@ import Test.Spec.Assertions (shouldEqual)
 import Test.Spec.Reporter (consoleReporter)
 import Test.Spec.Runner (runSpec)
 import Unsafe.Coerce (unsafeCoerce)
+
+foreign import createReadStream :: String -> Effect (Readable ())
+foreign import argv :: Effect (Array String)
 
 completion :: Either Error (Effect Unit) -> Effect Unit
 completion = case _ of

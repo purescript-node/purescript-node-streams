@@ -1,12 +1,12 @@
 -- | How to test:
 -- |
 -- | ```
--- | spago -x spago-dev.dhall test --main Test4
+-- | pulp test --main Test.Main4
 -- | ```
 -- |
 -- | This is a test that `readSome` will prevent the Node.js event
 -- | loop from exiting.
-module Test4 where
+module Test.Main4 where
 
 import Prelude
 
@@ -15,13 +15,15 @@ import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Aff (Error, Milliseconds(..), delay, parallel, runAff_, sequential)
 import Effect.Class.Console as Console
-import Node.Process (stdin)
+import Node.Stream (Readable)
 import Node.Stream.Aff (readSome)
 import Partial.Unsafe (unsafePartial)
 import Test.Spec (describe, it)
 import Test.Spec.Reporter (consoleReporter)
 import Test.Spec.Runner (runSpec)
 import Unsafe.Coerce (unsafeCoerce)
+
+foreign import stdin :: Readable ()
 
 completion :: Either Error (Effect Unit) -> Effect Unit
 completion = case _ of
