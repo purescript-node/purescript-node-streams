@@ -52,6 +52,22 @@ New features:
   - pipeline
   - fromString, fromBuffer
   - newPassThrough
+- Integrated `node-streams-aff` into library (#52 by @JordanMartinez)
+
+  Convenience APIs added for readable streams in "paused" mode:
+  - readSome
+  - readAll
+  - readN
+
+  Convenience APIs for writeable streams:
+  - write
+  - end
+  
+  Convenience APIs for converting `String`s from/to `Array Buffer`
+  - toStringUTF8
+  - fromStringUTF8
+
+  The only APIs from the library not added were `newReadable` and `push`.
 
 Bugfixes:
 - Drop misleading comment for `setEncoding` (#51 by @JordanMartinez)
@@ -65,6 +81,7 @@ Other improvements:
 - Refactor tests using `passThrough` streams (#49 by @JordanMartinez)
 - Updated FFI to use uncurried functions (#50 by @JordanMartinez)
 - Relocated `setEncoding`, `Read`, and `Write` for better locality in docs (#51 by @JordanMartinez)
+- Added `node-streams-aff` tests (#52 by @JordanMartinez)
 
 ## [v7.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v7.0.0) - 2022-04-29
 

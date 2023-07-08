@@ -14,7 +14,8 @@
   "devDependencies": {
     "purescript-assert": "^6.0.0",
     "purescript-console": "^6.0.0",
-    "purescript-partial": "^4.0.0"
+    "purescript-partial": "^4.0.0",
+    "purescript-spec": "^7.3.0"
   },
   "dependencies": {
     "purescript-effect": "^4.0.0",
@@ -23,6 +24,7 @@
     "purescript-node-buffer": "^9.0.0",
     "purescript-nullable": "^6.0.0",
     "purescript-prelude": "^6.0.0",
-    "purescript-node-event-emitter": "https://github.com/purescript-node/purescript-node-event-emitter.git#^3.0.0"
+    "purescript-node-event-emitter": "https://github.com/purescript-node/purescript-node-event-emitter.git#^3.0.0",
+    "purescript-aff": "^7.1.0"
   }
 }
