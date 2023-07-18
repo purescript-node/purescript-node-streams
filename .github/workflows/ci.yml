@@ -25,6 +25,7 @@ jobs:
         run: |
           npm install -g bower
           npm install
+          bower info purescript-node-buffer --verbose
           bower install --production
 
       - name: Build source
