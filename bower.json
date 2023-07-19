@@ -15,7 +15,7 @@
     "purescript-assert": "^6.0.0",
     "purescript-console": "^6.0.0",
     "purescript-partial": "^4.0.0",
-    "purescript-spec": "^7.3.0"
+    "purescript-spec": "^7.5.3"
   },
   "dependencies": {
     "purescript-effect": "^4.0.0",

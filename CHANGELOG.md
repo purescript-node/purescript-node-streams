@@ -87,6 +87,9 @@ Other improvements:
 - Updated FFI to use uncurried functions (#50 by @JordanMartinez)
 - Relocated `setEncoding`, `Read`, and `Write` for better locality in docs (#51 by @JordanMartinez)
 - Added `node-streams-aff` tests (#52 by @JordanMartinez)
+- Updated `spec` to `v7.5.3` to address `bower` dep issue (#54 by @JordanMartinez)
+
+  See https://github.com/purescript-spec/purescript-spec/pull/142 for more context.
 
 ## [v7.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v7.0.0) - 2022-04-29
 

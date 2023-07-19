@@ -25,6 +25,7 @@ jobs:
         run: |
           npm install -g bower
           npm install
+          bower info purescript-node-buffer --verbose
           bower install --production
 
       - name: Build source
@@ -35,7 +36,7 @@ jobs:
           bower install
           npx pulp test
           npx pulp test --main Test.Main1
-          npx pulp test --main Test.Main2 | wc -c
+          npx pulp test --main Test.Main2
           npx pulp test --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
           npx pulp test --main Test.Main4
 
