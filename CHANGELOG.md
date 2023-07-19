@@ -5,6 +5,16 @@ Notable changes to this project are documented in this file. The format is based
 ## [Unreleased]
 
 Breaking changes:
+
+New features:
+
+Bugfixes:
+
+Other improvements:
+
+## [v8.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v8.0.0) - 2022-07-19
+
+Breaking changes:
 - Update `node-buffer` to `v9.0.0` (#48 by @JordanMartinez)
 - Reimplement event handlers using `eventNameH`-style API (#49 by @JordanMartinez)
 
