@@ -488,10 +488,10 @@ allowHalfOpen d = runEffectFn1 allowHalfOpenImpl d
 
 foreign import allowHalfOpenImpl :: EffectFn1 (Duplex) (Boolean)
 
-pipeline :: forall w r. Readable w -> Array Duplex -> Writable r -> (Error -> Effect Unit) -> Effect Unit
-pipeline src transforms dest cb = runEffectFn4 pipelineImpl src transforms dest cb
+pipeline :: forall w r. Readable w -> Array Duplex -> Writable r -> (Maybe Error -> Effect Unit) -> Effect Unit
+pipeline src transforms dest cb = runEffectFn4 pipelineImpl src transforms dest $ mkEffectFn1 \err -> cb (toMaybe err)
 
-foreign import pipelineImpl :: forall w r. EffectFn4 (Readable w) (Array Duplex) (Writable r) ((Error -> Effect Unit)) (Unit)
+foreign import pipelineImpl :: forall w r. EffectFn4 (Readable w) (Array Duplex) (Writable r) (EffectFn1 (Nullable Error) Unit) (Unit)
 
 readableFromString :: String -> Encoding -> Effect (Readable ())
 readableFromString str enc = runEffectFn2 readableFromStrImpl str (encodingToNode enc)
