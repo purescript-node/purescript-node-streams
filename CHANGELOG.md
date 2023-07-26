@@ -12,6 +12,14 @@ Bugfixes:
 
 Other improvements:
 
+## Next
+
+Breaking changes:
+- Correct type signature for `pipeline`
+
+Bugfixes:
+- Fix FFI for `isPaused` and `pause`
+
 ## [v8.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v8.0.0) - 2022-07-19
 
 Breaking changes:

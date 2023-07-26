@@ -28,9 +28,9 @@ export const readableLengthImpl = (r) => r.readableLength;
 
 export const resumeImpl = (r) => r.resume();
 
-export const pauseImpl = (r) => r.pause;
+export const pauseImpl = (r) => r.pause();
 
-export const isPausedImpl = (r) => r.isPaused;
+export const isPausedImpl = (r) => r.isPaused();
 
 export const pipeImpl = (r, w) => r.pipe(w);
 
