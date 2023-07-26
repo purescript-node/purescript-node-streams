@@ -12,7 +12,7 @@ Bugfixes:
 
 Other improvements:
 
-## Next
+## [v9.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v9.0.0) - 2022-07-26
 
 Breaking changes:
 - Correct type signature for `pipeline` (#55 by @JordanMartinez)
