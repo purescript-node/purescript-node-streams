@@ -25,6 +25,6 @@
     "purescript-nullable": "^6.0.0",
     "purescript-prelude": "^6.0.0",
     "purescript-node-event-emitter": "https://github.com/purescript-node/purescript-node-event-emitter.git#^3.0.0",
-    "purescript-aff": "^7.1.0"
+    "purescript-aff": "^8.0.0"
   }
 }
