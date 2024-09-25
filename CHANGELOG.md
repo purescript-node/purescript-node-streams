@@ -12,6 +12,16 @@ Bugfixes:
 
 Other improvements:
 
+## [v10.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v10.0.0) - 2024-09-27
+
+Breaking changes:
+
+- Upgrade dependency `aff`. #57
+
+Other improvements:
+
+- Change build system from `bower` to `spago`. #57
+
 ## [v9.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v9.0.0) - 2022-07-26
 
 Breaking changes:
@@ -44,7 +54,7 @@ Breaking changes:
   ```
 - Renamed functions to better adhere to naming consistency (#50 by @JordanMartinez)
 
-  All functions that take an optional callback are now 
+  All functions that take an optional callback are now
   named using the following schema:
   - no callback: `functionName`
   - with callback: `functionName'`
@@ -80,7 +90,7 @@ New features:
   Convenience APIs for writeable streams:
   - write
   - end
-  
+
   Convenience APIs for converting `String`s from/to `Array Buffer`
   - toStringUTF8
   - fromStringUTF8
