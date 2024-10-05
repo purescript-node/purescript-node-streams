@@ -1,0 +1,33 @@
+package:
+  name: node-streams
+  publish:
+    license: MIT
+    version: 10.0.0
+    location:
+      githubOwner: purescript-node
+      githubRepo: purescript-node-streams
+  dependencies:
+    - effect: ">=4.0.0 <5.0.0"
+    - either: ">=6.0.0 <7.0.0"
+    - exceptions: ">=6.0.0 <7.0.0"
+    - node-buffer: ">=9.0.0 <10.0.0"
+    - nullable: ">=6.0.0 <7.0.0"
+    - prelude: ">=6.0.0 <7.0.0"
+    - node-event-emitter: ">=3.0.0 <4.0.0"
+    - aff: ">=8.0.0 <9.0.0"
+  test:
+    main: Test.Main
+    # See also other tests
+    #
+    #     spago test --main Test.Main1
+    #     spago test --main Test.Main2
+    #     spago test --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
+    #     spago test --main Test.Main4
+    #
+    dependencies:
+      - assert
+      - console
+      - partial
+      - spec
+
+workspace: {}

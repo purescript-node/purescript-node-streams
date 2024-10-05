@@ -10,35 +10,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: purescript-contrib/setup-purescript@main
         with:
           purescript: "unstable"
           purs-tidy: "latest"
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "lts/*"
-
-      - name: Install dependencies
-        run: |
-          npm install -g bower
-          npm install
-          bower info purescript-node-buffer --verbose
-          bower install --production
+          spago: "unstable"
 
       - name: Build source
-        run: npm run-script build
+        run: spago build
 
       - name: Run tests
         run: |
-          bower install
-          npx pulp test
-          npx pulp test --main Test.Main1
-          npx pulp test --main Test.Main2
-          npx pulp test --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
-          npx pulp test --main Test.Main4
+          set -x
+          spago test
+          spago test --main Test.Main1
+          spago test --main Test.Main2
+          spago test --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
+          spago test --main Test.Main4
 
       - name: Check formatting
         run: |
