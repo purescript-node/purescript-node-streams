@@ -14,7 +14,7 @@ package:
     - nullable: ">=6.0.0 <7.0.0"
     - prelude: ">=6.0.0 <7.0.0"
     - node-event-emitter: ">=3.0.0 <4.0.0"
-    - aff: ">=8.0.0 <9.0.0"
+    - aff: ">=7.0.0 <9.0.0"
   test:
     main: Test.Main
     # See also other tests
