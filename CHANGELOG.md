@@ -12,14 +12,11 @@ Bugfixes:
 
 Other improvements:
 
-## [v10.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v10.0.0) - 2024-09-27
-
-Breaking changes:
-
-- Upgrade dependency `aff`. #57
+## [v9.0.1](https://github.com/purescript-node/purescript-node-streams/releases/tag/v10.0.0) - 2024-09-27
 
 Other improvements:
 
+- Upgrade dependency `aff`. #57
 - Change build system from `bower` to `spago`. #57
 
 ## [v9.0.0](https://github.com/purescript-node/purescript-node-streams/releases/tag/v9.0.0) - 2022-07-26
