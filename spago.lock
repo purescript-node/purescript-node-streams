@@ -9,6 +9,9 @@
               "aff": ">=7.0.0 <9.0.0"
             },
             {
+              "arrays": ">=7.3.0 <8.0.0"
+            },
+            {
               "effect": ">=4.0.0 <5.0.0"
             },
             {
@@ -16,6 +19,9 @@
             },
             {
               "exceptions": ">=6.0.0 <7.0.0"
+            },
+            {
+              "maybe": ">=6.0.0 <7.0.0"
             },
             {
               "node-buffer": ">=9.0.0 <10.0.0"
@@ -28,6 +34,18 @@
             },
             {
               "prelude": ">=6.0.0 <7.0.0"
+            },
+            {
+              "refs": ">=6.0.0 <7.0.0"
+            },
+            {
+              "st": ">=6.2.0 <7.0.0"
+            },
+            {
+              "tailrec": ">=6.1.0 <7.0.0"
+            },
+            {
+              "unsafe-coerce": ">=6.0.0 <7.0.0"
             }
           ],
           "build_plan": [
@@ -740,8 +758,8 @@
     },
     "spec": {
       "type": "registry",
-      "version": "8.1.0",
-      "integrity": "sha256-kylPL0sBujW9w8yk+bguI92BiUuiyosPWyp/TTqPURw=",
+      "version": "8.1.1",
+      "integrity": "sha256-EM7UfQIaSgiw13LJ4ZASkfYmmRDKIlec3nYbGKFqGhk=",
       "dependencies": [
         "aff",
         "ansi",
