@@ -1,7 +1,7 @@
 -- | How to test:
 -- |
 -- | ```
--- | pulp test --main Test.Main2
+-- | npx spago test --main Test.Main2
 -- | ```
 module Test.Main2 where
 
@@ -37,4 +37,3 @@ main = do
     let actual = Array.length (String.split (Pattern "\n") str)
     unless (expected == expected) do
       throwError $ error $ "Expected " <> show expected <> " lines, but got " <> show actual <> " lines."
-

@@ -1,7 +1,7 @@
 -- | How to test:
 -- |
 -- | ```
--- | pulp test --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
+-- | npx spago test --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
 -- | ```
 module Test.Main3 where
 

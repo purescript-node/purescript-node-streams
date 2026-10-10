@@ -1,7 +1,7 @@
 -- | How to test:
 -- |
 -- | ```
--- | pulp test --main Test.Main4
+-- | npx spago test --main Test.Main4
 -- | ```
 -- |
 -- | This is a test that `readSome` will prevent the Node.js event

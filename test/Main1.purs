@@ -1,7 +1,7 @@
 -- | How to test:
 -- |
 -- | ```
--- | pulp test --main Test.Main1
+-- | npx spago test --main Test.Main1
 -- | ```
 -- |
 -- | We want to read from a file, not stdin, because stdin has no EOF.
