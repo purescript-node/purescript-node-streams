@@ -10,26 +10,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: purescript-contrib/setup-purescript@main
+      - uses: actions/setup-node@v6
         with:
-          purescript: "latest"
-          purs-tidy: "latest"
-          spago: "unstable"
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
 
       - name: Build source
-        run: spago build
+        run: npm run build
 
       - name: Run tests
         run: |
           set -x
-          spago test
-          spago test --main Test.Main1
-          spago test --main Test.Main2
-          spago test --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
-          spago test --main Test.Main4
+          npm test
+          npx --no-install spago test -p node-streams --main Test.Main1
+          npx --no-install spago test -p node-streams --main Test.Main2
+          npx --no-install spago test -p node-streams --main Test.Main3 -- <(head --bytes 1000000 /dev/zero)
+          npx --no-install spago test -p node-streams --main Test.Main4
+
+      - name: Run gzip example
+        run: |
+          node --input-type=module -e 'import { main } from "./output/Gzip/index.js"; main()' > "$RUNNER_TEMP/example.gz"
+          gzip -dc "$RUNNER_TEMP/example.gz" | cmp - example/Gzip.txt
+
+      - name: Lint JavaScript
+        run: npm run lint
 
       - name: Check formatting
-        run: |
-          purs-tidy check src test
+        run: npm run format:check

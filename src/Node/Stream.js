@@ -88,9 +88,11 @@ export const destroyedImpl = (w) => w.destroyed;
 
 export const allowHalfOpenImpl = (d) => d.allowHalfOpen;
 
-export const pipelineImpl = (src, transforms, dst, cb) => stream.pipeline([src, ...transforms, dst], cb);
+export const pipelineImpl = (src, transforms, dst, cb) =>
+  stream.pipeline([src, ...transforms, dst], cb);
 
-export const readableFromStrImpl = (str, encoding) => stream.Readable.from(str, { encoding, objectMode: false });
+export const readableFromStrImpl = (str, encoding) =>
+  stream.Readable.from(str, { encoding, objectMode: false });
 
 export const readableFromBufImpl = (buf) => stream.Readable.from(buf, { objectMode: false });
 

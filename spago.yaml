@@ -2,7 +2,7 @@ package:
   name: node-streams
   publish:
     license: MIT
-    version: 9.0.1
+    version: 9.0.2
     location:
       githubOwner: purescript-node
       githubRepo: purescript-node-streams
@@ -31,9 +31,15 @@ package:
     #     spago test --main Test.Main4
     #
     dependencies:
-      - assert
-      - console
-      - partial
-      - spec
+      - assert: ">=6.0.0 <7.0.0"
+      - console: ">=6.1.0 <7.0.0"
+      - control: ">=6.0.0 <7.0.0"
+      - foldable-traversable: ">=6.0.0 <7.0.0"
+      - parallel: ">=7.0.0 <8.0.0"
+      - partial: ">=4.0.0 <5.0.0"
+      - spec: ">=8.1.1 <9.0.0"
+      - strings: ">=6.0.1 <7.0.0"
 
-workspace: {}
+workspace:
+  packageSet:
+    registry: 81.4.0
