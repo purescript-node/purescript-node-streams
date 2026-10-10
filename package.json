@@ -1,7 +1,17 @@
 {
   "private": true,
+  "scripts": {
+    "build": "spago build --pedantic-packages",
+    "test": "spago test -p node-streams --pedantic-packages",
+    "lint": "oxlint --deny-warnings src test example/src",
+    "format": "purs-tidy format-in-place src test example/src && oxfmt 'src/**/*.js' 'test/**/*.js' 'example/src/**/*.js'",
+    "format:check": "purs-tidy check src test example/src && oxfmt --check 'src/**/*.js' 'test/**/*.js' 'example/src/**/*.js'"
+  },
   "devDependencies": {
+    "oxfmt": "0.72.0",
+    "oxlint": "1.87.0",
     "purescript": "0.15.16",
+    "purs-tidy": "0.11.1",
     "spago": "1.0.4"
   }
 }
